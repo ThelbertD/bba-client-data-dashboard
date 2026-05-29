@@ -10,22 +10,31 @@ Internal dashboard for **Better Body Academy** that visualises the `TRACKER - CL
 - **Date range filter** — preset chips (Today / 7D / 30D / MTD / QTD / YTD / All) + custom date inputs
 - **Click-through everything** — every KPI tile opens a slide-in drill-down with the filtered client list, sortable, searchable, exportable as CSV
 - **Calendar widget** — month view, sign-ups (blue) + endings (orange) + past due (red), click any day to drill into that day's clients
-- **Tab navigation** — left sidebar with all 14 sheet tabs (RAW, OFFBOARDED, ONBOARDING, etc.) — each gets an auto-generated dashboard
+- **Tab navigation** — left sidebar with all 10 sheet tabs (RAW, OFFBOARDED, ONBOARDING, etc.) — each gets an auto-generated dashboard
 - **Auto-dashboards** — each tab's columns are analysed (numeric / date / categorical detection) and the dashboard generates KPIs + charts automatically
 - **Cell-level interactions** — click any cell to add a filter chip, click a client ID to open a **Client 360** panel showing that client's record across every tab where they appear
 - **AI chat widget** — floating bubble bottom-right, answers questions about the current snapshot from local data (stub mode; ready to wire to Claude/OpenAI)
+
+## Source sheet
+
+```
+https://docs.google.com/spreadsheets/d/1wBlcdRKzT_MPf5ktldZbfvMn3eX7TjzmtIgtDo591IY/edit
+```
+
+Sharing must be set to **Anyone with link → Viewer** for `build_data.py` (and n8n) to read it without OAuth.
 
 ## Architecture
 
 ```
 Google Sheet  →  build_data.py  →  data.json  →  index.html (browser)
-                                                 ↑
-                                       n8n will replace build_data.py
-                                       once the pipeline is in place
+       │              │                                    ↑
+       │              └─ will be replaced by n8n          │
+       │                                                   │
+       └─────── n8n cron (every 1 min) ───────────────────┘
 ```
 
-- `build_data.py` — fetches all 14 tabs from the Sheet as CSV, structures `RAW` into typed client objects, includes the other 13 tabs as raw `{headers, rows}`. Outputs a single `data.json`.
-- `index.html` — single-file dashboard. Loads `data.json`, all aggregation runs client-side in JS so date filtering and drill-downs are instant.
+- `build_data.py` — fetches all 10 tabs from the Sheet as CSV, structures `RAW` into typed client objects, includes the other tabs as raw `{headers, rows}`. Outputs a single `data.json`.
+- `index.html` — single-file dashboard. Loads `data.json` every **1 minute**. All aggregation runs client-side in JS so date filtering and drill-downs are instant.
 
 ## Run it locally
 
@@ -40,15 +49,55 @@ python -m http.server 8765
 # http://localhost:8765/
 ```
 
-## Wiring up n8n (when ready)
+To refresh the data manually: re-run `python build_data.py --out data.json` — the dashboard will pick up the new file on its next 1-minute poll.
 
-`index.html` has a constant near the bottom of the script:
+## Wiring up n8n (the real auto-refresh path)
 
-```js
-const N8N_WEBHOOK_URL = '';  // <-- paste n8n GET endpoint here
+The dashboard already polls its data source every 1 minute. n8n just needs to refresh that source on the same cadence.
+
+**n8n workflow (one node per box):**
+
+1. **Schedule Trigger** — `every 1 minute`
+2. **HTTP Request** (one per tab, or loop) — `GET https://docs.google.com/spreadsheets/d/1wBlcdRKzT_MPf5ktldZbfvMn3eX7TjzmtIgtDo591IY/export?format=csv&gid={GID}`
+3. **Code node** (Python or JS) — replicate the aggregation logic in `build_data.py` (`Counter` on status / program / coach / closer, sums on contract / cash, ISO date filtering, top-N for closers / recent / ending). Emit JSON in the same shape `build_data.py` produces.
+4. **Webhook Response** OR **Write Binary File** — either:
+   - **Webhook**: expose at `https://your-n8n/webhook/bba-data.json`, then set in `index.html`:
+     ```js
+     const N8N_WEBHOOK_URL = 'https://your-n8n/webhook/bba-data.json';
+     ```
+   - **File**: write `data.json` directly to wherever the dashboard is hosted (S3, the same web server's static folder, etc.). The dashboard's existing fetch will see the new file on its next poll.
+
+**Output shape contract:**
+
+```jsonc
+{
+  "source": "TRACKER - CLIENT SUCCESS (RAW)",
+  "syncedAt": "2026-05-29T17:50:00Z",       // ISO 8601
+  "clients": [ { "id":"…", "name":"…", "originDateISO":"YYYY-MM-DD", "status":"…", … } ],
+  "tabs": {
+    "RAW":          { "headers": ["…"], "rows": [ ["…"], … ], "rowCount": 1647 },
+    "OFFBOARDED":   { "headers": ["…"], "rows": [ ["…"], … ], "rowCount": 642 },
+    /* … one entry per tab … */
+  }
+}
 ```
 
-When set, the dashboard fetches from there instead of `./data.json`. The endpoint must return JSON in the same shape `build_data.py` produces.
+Don't include the pre-computed `totals` / `kpis` / `charts` / `closers` / `recent` / `endingSoon` — the browser re-derives them from `clients`. That keeps the n8n flow minimal.
+
+**Sheet tab gids (for the HTTP nodes):**
+
+| Tab | gid |
+|---|---|
+| RAW | 754418002 |
+| CLIENT_NOTES | 182322117 |
+| DATA VALIDATION DROPDOWNS | 801848151 |
+| OFFBOARDED | 775534642 |
+| CLIENT 121 | 1462666945 |
+| CHALLENGE UPGRADE | 1853599286 |
+| ONBOARDING | 986032430 |
+| KICKOFF CALLS | 686328974 |
+| PROGRAMS | 340082301 |
+| RETREAT | 2102321023 |
 
 ## Tech
 

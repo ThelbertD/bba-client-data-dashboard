@@ -20,7 +20,7 @@ import csv, io, json, sys, argparse, urllib.request
 from collections import Counter, defaultdict
 from datetime import datetime, timezone
 
-SHEET_ID = "1NCwsnmjW5SnBuWcYofcS_cH-JBtE3_DCbMJa3RgMjIk"
+SHEET_ID = "1wBlcdRKzT_MPf5ktldZbfvMn3eX7TjzmtIgtDo591IY"
 RAW_GID  = "754418002"
 
 # All tabs in the TRACKER - CLIENT SUCCESS sheet (extracted from htmlview)
@@ -35,10 +35,6 @@ TABS = [
     ("KICKOFF CALLS",             "686328974"),
     ("PROGRAMS",                  "340082301"),
     ("RETREAT",                   "2102321023"),
-    ("COUPLES",                   "1602502701"),
-    ("LIFTING PLANS",             "1242741709"),
-    ("WORKFLOW",                  "683476780"),
-    ("TOPICS",                    "647094645"),
 ]
 
 # --- helpers ----------------------------------------------------------------

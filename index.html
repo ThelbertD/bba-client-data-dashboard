@@ -598,7 +598,7 @@
 
 <div class="main-area">
 
-<div class="strip">📊 LIVE DASHBOARD · Google Sheet → n8n → Dashboard · Auto-refreshes every 5 min</div>
+<div class="strip">📊 LIVE DASHBOARD · Google Sheet → n8n → Dashboard · Auto-refreshes every 1 min</div>
 
 <header>
   <div class="brand">
@@ -756,7 +756,7 @@
       <code>N8N_WEBHOOK_URL</code>
       <span>in this file.</span>
     </div>
-    <span style="color:var(--grey)">Auto-refresh: <strong style="color:var(--white)">5 min</strong></span>
+    <span style="color:var(--grey)">Auto-refresh: <strong style="color:var(--white)">1 min</strong></span>
   </div>
 
   </div><!-- /viewDashboard -->
@@ -2226,9 +2226,9 @@ function applyUrlParams(){
   if(drill)  setTimeout(() => openDrillDown(drill), 100);
 }
 
-/* Initial load + auto-refresh every 5 min + tick relative time every 30s */
+/* Initial load + auto-refresh every 1 min + tick relative time every 30s */
 loadData().then(applyUrlParams);
-setInterval(loadData, 5 * 60 * 1000);
+setInterval(loadData, 1 * 60 * 1000);
 setInterval(() => _lastData && renderSyncTime(_lastData.syncedAt), 30 * 1000);
 
 /* =================================================================
