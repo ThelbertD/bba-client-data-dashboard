@@ -253,6 +253,23 @@
   .presets button:hover{background:var(--bg);color:var(--accent-soft)}
   .presets button.active{background:var(--accent);color:#0c2230}
 
+  /* Support coach selector */
+  .coach-pick{display:inline-flex;align-items:center;gap:8px;background:var(--panel);
+    border:1px solid var(--line);border-radius:100px;padding:6px 6px 6px 12px;font-size:12px;transition:all .15s}
+  .coach-pick label{color:var(--grey);font-weight:700;font-size:11px;letter-spacing:.04em;text-transform:uppercase;white-space:nowrap}
+  .coach-pick select{background:var(--bg);color:var(--white);border:1px solid var(--line);
+    font-family:inherit;font-size:12px;font-weight:700;padding:6px 28px 6px 10px;border-radius:100px;
+    cursor:pointer;outline:none;appearance:none;-webkit-appearance:none;-moz-appearance:none;
+    background-image:url("data:image/svg+xml;utf8,<svg xmlns='http://www.w3.org/2000/svg' width='10' height='6' viewBox='0 0 10 6'><path fill='%23a4a9b3' d='M5 6L0 0h10z'/></svg>");
+    background-repeat:no-repeat;background-position:right 10px center;max-width:220px;text-overflow:ellipsis}
+  .coach-pick select:hover{border-color:var(--accent);color:var(--accent-soft)}
+  .coach-pick select:focus{border-color:var(--accent)}
+  .coach-pick.active{box-shadow:0 0 0 2px var(--accent-dim);border-color:var(--accent)}
+  .coach-pick.active label{color:var(--accent-soft)}
+
+  /* Coach leaderboard active row highlight */
+  tr.coach-active{background:var(--accent-dim) !important;box-shadow:inset 3px 0 0 var(--accent)}
+
   .reload-btn{background:var(--accent);color:#0c2230;border:0;font-family:'Archivo Black';
     text-transform:uppercase;font-size:11px;letter-spacing:.06em;
     padding:10px 16px;border-radius:8px;cursor:pointer;transition:transform .15s}
@@ -707,6 +724,18 @@
         <button data-preset="ytd">YTD</button>
         <button data-preset="all" class="active">All</button>
       </div>
+      <div class="coach-pick">
+        <label for="coachSelect">👤 Support Coach</label>
+        <select id="coachSelect"><option value="">All coaches</option></select>
+      </div>
+      <div class="coach-pick" id="coachPickWrap">
+        <label for="coachPick">Support Coach</label>
+        <select id="coachPick"><option value="">All coaches</option></select>
+      </div>
+      <div class="coach-pick" id="coachPick">
+        <label for="coachSelect">Support Coach</label>
+        <select id="coachSelect"><option value="">All coaches</option></select>
+      </div>
       <button class="reload-btn" id="reloadBtn">↻ Refresh</button>
     </div>
   </div>
@@ -762,6 +791,24 @@
     </div>
     <div class="cal-grid" id="calGrid"></div>
     <div class="cal-summary" id="calSummary"></div>
+  </div>
+
+  <div class="section-title">Support coach performance <span class="pill">Ranked by retention</span></div>
+  <div class="card">
+    <table>
+      <thead>
+        <tr>
+          <th>Support Coach</th>
+          <th class="num">Total Clients</th>
+          <th class="num">Active</th>
+          <th class="num">Cancelled</th>
+          <th class="num">Retention</th>
+          <th class="num">Contract Value</th>
+          <th></th>
+        </tr>
+      </thead>
+      <tbody id="supportCoachBody"></tbody>
+    </table>
   </div>
 
   <div class="section-title">Closer leaderboard</div>
@@ -982,6 +1029,7 @@ const ACTIVE_STATUSES = new Set(['ACTIVE_COACHING','ACTIVE_ONBOARDING','ACTIVE_L
 const STATE = {
   raw: null,                            // full data.json (with clients[])
   filter: { from: null, to: null, preset: 'all' },
+  coachFilter: null,                    // null = all coaches; else exact supportCoach name
   computed: null,
 };
 let _lastData = null;                   // alias for chat widget compatibility
@@ -1018,9 +1066,11 @@ function filterLabel(){
 
 function filterClients(){
   const { from, to } = STATE.filter;
+  const coach = STATE.coachFilter;
   if(!STATE.raw?.clients) return [];
-  if(!from && !to) return STATE.raw.clients;
   return STATE.raw.clients.filter(c => {
+    if(coach && (c.supportCoach || '').toUpperCase() !== coach.toUpperCase()) return false;
+    if(!from && !to) return true;
     if(!c.originDateISO) return false;
     if(from && c.originDateISO < from) return false;
     if(to   && c.originDateISO > to)   return false;
@@ -1337,6 +1387,93 @@ function renderCharts(data){
   renderBarChart('chartCadence', data.charts.byCadence, { multicolor:true });
 }
 
+/* Support coach leaderboard — always built from the UNFILTERED client list
+   so the comparison stays meaningful when a single coach is selected.
+   Excludes "OB TEAM" (catch-all) and "N/A" / blanks. Min 5 clients. */
+const SUPPORT_COACH_EXCLUDE = new Set(['', 'N/A', 'OB TEAM', 'UNASSIGNED']);
+
+function computeSupportCoachLeaderboard(){
+  const all = STATE.raw?.clients || [];
+  const by = new Map();
+  for(const c of all){
+    const name = (c.supportCoach || '').trim().toUpperCase();
+    if(SUPPORT_COACH_EXCLUDE.has(name)) continue;
+    if(!by.has(name)) by.set(name, []);
+    by.get(name).push(c);
+  }
+  const rows = [];
+  for(const [name, clients] of by){
+    if(clients.length < 5) continue;
+    const active = clients.filter(c => ACTIVE_STATUSES.has(c.status)).length;
+    const cancelled = clients.filter(c => c.status === 'CANCELLED').length;
+    const cv = clients.reduce((s,c) => s + (c.contractValue || 0), 0);
+    const denom = active + cancelled; // ignore unknown statuses
+    const retention = denom ? Math.round(active / denom * 1000) / 10 : 0;
+    rows.push({
+      name: titleCase(name),
+      key: name,
+      clients: clients.length,
+      active, cancelled,
+      retention,
+      contractValue: Math.round(cv),
+    });
+  }
+  rows.sort((a,b) => b.retention - a.retention || b.clients - a.clients);
+  return rows;
+}
+
+function renderSupportCoachLeaderboard(){
+  const rows = computeSupportCoachLeaderboard();
+  const body = $('#supportCoachBody');
+  if(!body) return;
+  const activeCoach = (STATE.coachFilter || '').toUpperCase();
+  body.innerHTML = rows.map(c => {
+    const isActive = activeCoach === c.key;
+    const btnLabel = isActive ? 'Clear' : 'Filter →';
+    return `<tr class="${isActive ? 'coach-active' : ''}">
+      <td><div class="closer"><div class="avatar">${initials(c.name)}</div>${escapeHtml(c.name)}</div></td>
+      <td class="num">${fmtInt(c.clients)}</td>
+      <td class="num">${fmtInt(c.active)}</td>
+      <td class="num" style="color:var(--grey)">${fmtInt(c.cancelled)}</td>
+      <td class="num"><span class="pct ${pctClass(c.retention)}">${c.retention.toFixed(1)}%</span></td>
+      <td class="num"><strong>${fmtMoney(c.contractValue)}</strong></td>
+      <td class="num"><button class="reload-btn" data-coach="${escapeHtml(c.key)}" style="padding:6px 12px;font-size:10px">${btnLabel}</button></td>
+    </tr>`;
+  }).join('') || `<tr><td colspan="7" style="text-align:center;color:var(--grey-dim);padding:24px">No support coaches with 5+ clients.</td></tr>`;
+  body.querySelectorAll('button[data-coach]').forEach(btn => {
+    btn.addEventListener('click', (e) => {
+      e.stopPropagation();
+      const target = btn.dataset.coach;
+      setCoachFilter(activeCoach === target ? null : target);
+    });
+  });
+}
+
+function populateCoachSelect(){
+  const sel = $('#coachSelect');
+  if(!sel) return;
+  const all = STATE.raw?.clients || [];
+  const counts = new Map();
+  for(const c of all){
+    const name = (c.supportCoach || '').trim().toUpperCase();
+    if(SUPPORT_COACH_EXCLUDE.has(name)) continue;
+    counts.set(name, (counts.get(name) || 0) + 1);
+  }
+  const opts = Array.from(counts.entries())
+    .sort((a,b) => a[0].localeCompare(b[0]))
+    .map(([name, n]) => `<option value="${escapeHtml(name)}">${escapeHtml(titleCase(name))} (${n})</option>`);
+  const current = STATE.coachFilter || '';
+  sel.innerHTML = `<option value="">All coaches (${all.length.toLocaleString()})</option>${opts.join('')}`;
+  sel.value = current;
+}
+
+function setCoachFilter(name){
+  STATE.coachFilter = name || null;
+  $('#coachPick').classList.toggle('active', !!STATE.coachFilter);
+  if($('#coachSelect')) $('#coachSelect').value = STATE.coachFilter || '';
+  if(STATE.raw) render();
+}
+
 function renderClosers(data){
   $('#closersBody').innerHTML = (data.closers || []).map(c => `
     <tr>
@@ -1410,6 +1547,7 @@ function render(){
   renderKpis(metrics);
   renderCharts(metrics);
   renderCalendar();
+  renderSupportCoachLeaderboard();
   renderClosers(metrics);
   renderEnding(metrics);
   renderRecent(metrics);
@@ -1432,6 +1570,7 @@ async function loadData(){
       throw new Error('data.json is missing the clients[] array — re-run build_data.py');
     }
     STATE.raw = raw;
+    populateCoachSelect();
     render();
   } catch (err){
     console.warn('[BBA Dashboard] data load failed:', err);
@@ -1475,6 +1614,8 @@ dateFromEl.addEventListener('change', onDateChange);
 dateToEl.addEventListener('change', onDateChange);
 
 $('#filterClear').addEventListener('click', () => applyFilter(presetRange('all')));
+
+$('#coachSelect')?.addEventListener('change', (e) => setCoachFilter(e.target.value || null));
 
 $('#reloadBtn').addEventListener('click', loadData);
 
