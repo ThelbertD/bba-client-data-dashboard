@@ -1,0 +1,456 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>BBA Client Data Dashboard — Project Progress</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Archivo+Black&family=Inter:wght@400;500;600;700;800;900&display=swap" rel="stylesheet">
+<style>
+  :root{
+    /* BBA brand: black, blue, white, shades of grey. No red. No pink. */
+    --bg:#0a0d12;
+    --panel:#141821;
+    --panel2:#1d2230;
+    --white:#f4f5f7;
+    --grey:#a4a9b3;
+    --grey-dim:#5c616b;
+    --line:#252b3a;
+    --line-soft:#1c2230;
+    --accent:#38b6ff;
+    --accent-soft:#7fd0ff;
+    --accent-deep:#1a73b8;
+    --accent-dim:rgba(56,182,255,.13);
+    --accent-dimmer:rgba(56,182,255,.06);
+
+    /* status palette — derived from the blue + grey range only */
+    --done:#38b6ff;
+    --done-dim:rgba(56,182,255,.14);
+    --partial:#7fd0ff;
+    --partial-dim:rgba(127,208,255,.12);
+    --pending:#5c616b;
+    --pending-dim:rgba(164,169,179,.10);
+    --blocked:#3a4256;
+    --blocked-dim:rgba(58,66,86,.40);
+  }
+  *{margin:0;padding:0;box-sizing:border-box}
+  html,body{background:var(--bg);color:var(--white);font-family:'Inter',sans-serif;line-height:1.55;-webkit-font-smoothing:antialiased;min-height:100vh}
+  h1,h2,h3,h4{font-family:'Archivo Black',sans-serif;text-transform:uppercase;line-height:1.05;letter-spacing:-.01em}
+  a{color:var(--accent);text-decoration:none}
+  a:hover{color:var(--accent-soft)}
+
+  /* Layout */
+  .wrap{max-width:1180px;margin:0 auto;padding:36px 28px 80px}
+  .section{background:linear-gradient(180deg,var(--panel),#11141c);border:1px solid var(--line);border-radius:20px;padding:40px;margin-bottom:24px;box-shadow:0 24px 50px rgba(0,0,0,.4)}
+  .section.cover{background:radial-gradient(900px 480px at 18% -10%,var(--accent-dim),transparent 65%),linear-gradient(180deg,var(--panel),#0e1119);text-align:left;padding:54px 48px;position:relative;overflow:hidden}
+  .section.cover::after{content:"";position:absolute;right:-120px;bottom:-120px;width:360px;height:360px;border-radius:50%;background:radial-gradient(circle,var(--accent-dim),transparent 70%);pointer-events:none}
+
+  /* Cover */
+  .cover-tag{display:inline-block;background:var(--accent-dim);color:var(--accent-soft);font-size:11px;font-weight:800;letter-spacing:.18em;text-transform:uppercase;padding:6px 14px;border-radius:100px;margin-bottom:18px}
+  .cover-logo{display:block;height:34px;margin-bottom:28px;opacity:.95}
+  .cover h1{font-size:clamp(34px,5.4vw,56px);margin-bottom:14px;letter-spacing:-.02em}
+  .cover h1 .accent{color:var(--accent)}
+  .cover .lede{color:var(--grey);font-size:17px;font-weight:500;max-width:720px}
+  .meta-row{display:flex;flex-wrap:wrap;gap:24px;margin-top:30px;padding-top:24px;border-top:1px solid var(--line)}
+  .meta-row .meta{font-size:12px;color:var(--grey-dim);font-weight:700;letter-spacing:.10em;text-transform:uppercase}
+  .meta-row .meta strong{color:var(--white);font-weight:800;font-family:'Inter';letter-spacing:0;text-transform:none;font-size:14px;display:block;margin-top:4px}
+
+  .cta-row{display:flex;flex-wrap:wrap;gap:12px;margin-top:30px}
+  .cta{display:inline-flex;align-items:center;gap:10px;background:var(--accent);color:#0a0d12;font-weight:800;font-size:14px;padding:14px 22px;border-radius:12px;transition:transform .12s,background .12s;letter-spacing:.02em}
+  .cta:hover{background:var(--accent-soft);color:#0a0d12;transform:translateY(-1px)}
+  .cta.ghost{background:transparent;color:var(--white);border:1px solid var(--line)}
+  .cta.ghost:hover{border-color:var(--accent);background:var(--accent-dimmer);color:var(--white)}
+  .cta .arrow{transition:transform .15s}
+  .cta:hover .arrow{transform:translateX(3px)}
+
+  /* Section heading */
+  .section-tag{display:inline-block;background:var(--accent-dim);color:var(--accent-soft);font-size:10px;font-weight:800;letter-spacing:.18em;text-transform:uppercase;padding:5px 12px;border-radius:100px;margin-bottom:14px}
+  .section h2{font-size:clamp(22px,2.8vw,30px);margin-bottom:10px}
+  .section .lead{color:var(--grey);font-size:14px;margin-bottom:30px;font-weight:500;max-width:780px}
+
+  /* Scorecard */
+  .progress-bar-wrap{margin:24px 0 8px}
+  .progress-bar{position:relative;height:18px;background:var(--panel2);border:1px solid var(--line);border-radius:100px;overflow:hidden}
+  .progress-bar .fill{height:100%;background:linear-gradient(90deg,var(--accent-deep),var(--accent),var(--accent-soft));border-radius:100px;position:relative}
+  .progress-bar .fill::after{content:"";position:absolute;top:0;left:0;right:0;bottom:0;background:linear-gradient(90deg,transparent 0%,rgba(255,255,255,.18) 50%,transparent 100%);animation:shimmer 2.4s linear infinite}
+  @keyframes shimmer{0%{transform:translateX(-100%)}100%{transform:translateX(100%)}}
+  .progress-meta{display:flex;justify-content:space-between;align-items:baseline;margin-top:12px}
+  .progress-meta .label{color:var(--grey);font-size:13px;font-weight:600}
+  .progress-meta .pct{font-family:'Archivo Black';font-size:32px;color:var(--accent);letter-spacing:-.02em}
+
+  /* Stat grid */
+  .stats{display:grid;grid-template-columns:repeat(4,1fr);gap:14px;margin-top:30px}
+  .stat{background:var(--bg);border:1px solid var(--line);border-radius:14px;padding:22px;position:relative;overflow:hidden}
+  .stat::before{content:"";position:absolute;top:0;left:0;width:3px;height:100%;background:var(--accent)}
+  .stat.done::before{background:var(--done)}
+  .stat.partial::before{background:var(--partial)}
+  .stat.pending::before{background:var(--pending)}
+  .stat.blocked::before{background:var(--blocked)}
+  .stat .label{font-size:10px;font-weight:800;color:var(--grey-dim);letter-spacing:.14em;text-transform:uppercase;margin-bottom:12px}
+  .stat .value{font-family:'Archivo Black';font-size:44px;line-height:1;color:var(--white)}
+  .stat.done .value{color:var(--done)}
+  .stat.partial .value{color:var(--partial)}
+  .stat .sub{font-size:12px;color:var(--grey);margin-top:8px;font-weight:600}
+
+  /* Phase timeline */
+  .phases{display:flex;flex-direction:column;gap:14px;margin-top:18px}
+  .phase{display:grid;grid-template-columns:54px 1fr auto;gap:18px;align-items:center;background:var(--bg);border:1px solid var(--line);border-radius:14px;padding:18px 22px;transition:border-color .15s,transform .15s,background .15s}
+  .phase:hover{border-color:var(--accent);background:var(--accent-dimmer)}
+  .phase-num{font-family:'Archivo Black';font-size:18px;color:var(--accent);width:46px;height:46px;border-radius:12px;background:var(--accent-dim);display:flex;align-items:center;justify-content:center;flex-shrink:0;border:1px solid rgba(56,182,255,.25)}
+  .phase.complete .phase-num{background:var(--done-dim);color:var(--done)}
+  .phase.active .phase-num{background:var(--accent);color:#0a0d12;box-shadow:0 0 0 4px var(--accent-dim)}
+  .phase.pending .phase-num{background:var(--pending-dim);color:var(--grey)}
+  .phase-body .title{font-family:'Archivo Black';font-size:14px;letter-spacing:.04em;text-transform:uppercase;margin-bottom:4px;color:var(--white)}
+  .phase-body .desc{font-size:13px;color:var(--grey);line-height:1.5}
+  .phase-status{display:flex;flex-direction:column;align-items:flex-end;gap:6px;flex-shrink:0}
+  .phase-progress{width:160px;height:6px;background:var(--panel2);border-radius:100px;overflow:hidden}
+  .phase-progress .bar{height:100%;background:linear-gradient(90deg,var(--accent-deep),var(--accent));border-radius:100px}
+  .phase-pct{font-family:'Archivo Black';font-size:13px;color:var(--accent);letter-spacing:.04em}
+  .phase.complete .phase-pct{color:var(--done)}
+  .phase.pending .phase-pct{color:var(--grey-dim)}
+
+  /* Feature cards */
+  .feature-list{display:grid;grid-template-columns:repeat(2,1fr);gap:12px}
+  .feat{background:var(--bg);border:1px solid var(--line);border-radius:12px;padding:16px 18px;display:flex;gap:14px;align-items:flex-start;transition:border-color .15s,transform .15s}
+  .feat:hover{border-color:var(--accent);transform:translateY(-1px)}
+  .feat .icon{width:28px;height:28px;border-radius:8px;background:var(--done-dim);color:var(--done);display:flex;align-items:center;justify-content:center;flex-shrink:0;font-weight:900;font-size:14px}
+  .feat .title{font-weight:700;font-size:14px;color:var(--white);margin-bottom:2px}
+  .feat .desc{font-size:12.5px;color:var(--grey);line-height:1.45}
+
+  /* Coming next list */
+  .next-list{display:flex;flex-direction:column;gap:12px}
+  .next{display:grid;grid-template-columns:48px 1fr auto;gap:18px;align-items:center;background:var(--bg);border:1px solid var(--line);border-radius:14px;padding:18px 22px;border-left:3px solid var(--accent)}
+  .next-icon{width:40px;height:40px;border-radius:10px;background:var(--accent-dim);color:var(--accent);display:flex;align-items:center;justify-content:center;font-family:'Archivo Black';font-size:15px}
+  .next-body .title{font-weight:700;font-size:14.5px;color:var(--white);margin-bottom:3px}
+  .next-body .desc{font-size:12.5px;color:var(--grey);line-height:1.5}
+  .next-eta{font-size:11px;color:var(--accent-soft);font-weight:800;letter-spacing:.10em;text-transform:uppercase;background:var(--accent-dim);padding:6px 12px;border-radius:100px;white-space:nowrap;flex-shrink:0}
+
+  /* Timeline panel */
+  .timeline{display:grid;grid-template-columns:repeat(3,1fr);gap:16px;margin-top:14px}
+  .tl-card{background:var(--bg);border:1px solid var(--line);border-radius:14px;padding:22px;position:relative;overflow:hidden}
+  .tl-card .date{font-family:'Archivo Black';font-size:26px;color:var(--accent);letter-spacing:-.01em;margin-bottom:6px}
+  .tl-card .label{font-size:10px;font-weight:800;letter-spacing:.14em;color:var(--grey-dim);text-transform:uppercase;margin-bottom:14px}
+  .tl-card .desc{font-size:13px;color:var(--white);font-weight:500;line-height:1.5}
+  .tl-card.current{border-color:var(--accent);background:linear-gradient(180deg,var(--accent-dimmer),var(--bg))}
+  .tl-card.current::before{content:"NOW";position:absolute;top:14px;right:14px;font-family:'Archivo Black';font-size:10px;letter-spacing:.18em;color:var(--accent);background:var(--accent-dim);padding:5px 10px;border-radius:100px}
+
+  /* Acceptance list */
+  .accept{display:flex;flex-direction:column;gap:10px}
+  .accept-item{display:flex;align-items:center;gap:14px;background:var(--bg);border:1px solid var(--line);border-radius:10px;padding:14px 18px}
+  .accept-item .check{width:22px;height:22px;border-radius:50%;border:2px solid var(--line);flex-shrink:0;display:flex;align-items:center;justify-content:center;font-size:12px;font-weight:900}
+  .accept-item.done .check{background:var(--done);border-color:var(--done);color:#0a0d12}
+  .accept-item.done .check::before{content:"\2713"}
+  .accept-item.pending .check{border-color:var(--grey-dim)}
+  .accept-item .text{color:var(--white);font-size:13.5px;font-weight:500}
+  .accept-item.pending .text{color:var(--grey)}
+
+  /* Footer */
+  footer{text-align:center;color:var(--grey-dim);font-size:12px;padding:30px 20px 10px}
+  footer .src{color:var(--grey);font-weight:600;margin-bottom:6px}
+
+  @media (max-width:780px){
+    .wrap{padding:24px 14px 60px}
+    .section{padding:28px 22px}
+    .section.cover{padding:40px 26px}
+    .stats{grid-template-columns:repeat(2,1fr)}
+    .timeline{grid-template-columns:1fr}
+    .feature-list{grid-template-columns:1fr}
+    .phase{grid-template-columns:46px 1fr;gap:14px}
+    .phase-status{grid-column:1/-1;flex-direction:row;align-items:center;justify-content:space-between;margin-top:6px}
+    .phase-progress{flex:1;max-width:none}
+    .next{grid-template-columns:40px 1fr;gap:14px}
+    .next-eta{grid-column:1/-1;margin-top:4px;width:fit-content}
+  }
+</style>
+</head>
+<body>
+
+<div class="wrap">
+
+  <!-- COVER -->
+  <section class="section cover">
+    <div class="cover-tag">Progress Report · Updated 31 May 2026</div>
+    <img src="Images/(BBA) Logo-Horizantal White.png" alt="BBA" class="cover-logo">
+    <h1>Client Data Dashboard<br><span class="accent">Build Progress</span></h1>
+    <p class="lede">A live, login-protected view of retention, churn, and renewals — sourced from the TRACKER spreadsheet, refreshed every minute, broken down by support coach. Built for Jase and the management team to baseline performance and identify the coaches driving the best outcomes.</p>
+
+    <div class="meta-row">
+      <div class="meta">Phase<strong>2 of 6 in progress</strong></div>
+      <div class="meta">Demo target<strong>Mid–late this week</strong></div>
+      <div class="meta">Retention baseline<strong>1 June 2026</strong></div>
+      <div class="meta">Build estimate<strong>2–3 days remaining</strong></div>
+    </div>
+
+    <div class="cta-row">
+      <a class="cta" href="/" target="_blank">Open the live dashboard <span class="arrow">→</span></a>
+      <a class="cta ghost" href="#whats-next">See what's next</a>
+    </div>
+  </section>
+
+  <!-- SCORECARD -->
+  <section class="section">
+    <div class="section-tag">Scorecard</div>
+    <h2>Where we are right now</h2>
+    <p class="lead">28 features in the spec. Half are already built and visible in the dashboard. The remaining work is concentrated in the metrics layer (churn, retention, renewal) and the access layer (login per coach).</p>
+
+    <div class="progress-bar-wrap">
+      <div class="progress-bar"><div class="fill" style="width:55%"></div></div>
+      <div class="progress-meta">
+        <span class="label">Overall delivery — counting partials as half-credit</span>
+        <span class="pct">55%</span>
+      </div>
+    </div>
+
+    <div class="stats">
+      <div class="stat done">
+        <div class="label">Delivered</div>
+        <div class="value">14</div>
+        <div class="sub">Built &amp; visible in the dashboard</div>
+      </div>
+      <div class="stat partial">
+        <div class="label">In progress</div>
+        <div class="value">3</div>
+        <div class="sub">Wired, awaiting final connection</div>
+      </div>
+      <div class="stat pending">
+        <div class="label">Lined up</div>
+        <div class="value">7</div>
+        <div class="sub">Next on the build queue</div>
+      </div>
+      <div class="stat blocked">
+        <div class="label">Awaiting input</div>
+        <div class="value">4</div>
+        <div class="sub">Need access keys or accounts</div>
+      </div>
+    </div>
+  </section>
+
+  <!-- PHASE TIMELINE -->
+  <section class="section">
+    <div class="section-tag">Build plan</div>
+    <h2>The six phases</h2>
+    <p class="lead">Each phase is a self-contained milestone. The first two are largely complete — Phase 2 is where this week's focus sits.</p>
+
+    <div class="phases">
+      <div class="phase complete">
+        <div class="phase-num">0</div>
+        <div class="phase-body">
+          <div class="title">Data readiness</div>
+          <div class="desc">Confirm the source spreadsheet has the columns the metrics depend on — support coach, status, status date, last event, price.</div>
+        </div>
+        <div class="phase-status">
+          <div class="phase-progress"><div class="bar" style="width:80%"></div></div>
+          <div class="phase-pct">80%</div>
+        </div>
+      </div>
+
+      <div class="phase active">
+        <div class="phase-num">1</div>
+        <div class="phase-body">
+          <div class="title">Live data pipeline</div>
+          <div class="desc">The dashboard already refreshes every minute. The final piece — the automated n8n flow that pushes fresh data without a manual run — is the next wire-up.</div>
+        </div>
+        <div class="phase-status">
+          <div class="phase-progress"><div class="bar" style="width:60%"></div></div>
+          <div class="phase-pct">60%</div>
+        </div>
+      </div>
+
+      <div class="phase active">
+        <div class="phase-num">2</div>
+        <div class="phase-body">
+          <div class="title">Priority metrics — churn, retention, renewal</div>
+          <div class="desc">The four KPI cards Jase wants on the top row: churn rate, retention rate, renewal rate, and the off-boarding split (paying clients versus one-month challenge clients).</div>
+        </div>
+        <div class="phase-status">
+          <div class="phase-progress"><div class="bar" style="width:15%"></div></div>
+          <div class="phase-pct">15%</div>
+        </div>
+      </div>
+
+      <div class="phase pending">
+        <div class="phase-num">3</div>
+        <div class="phase-body">
+          <div class="title">The coach story</div>
+          <div class="desc">Support coach leaderboard ranked by retention, plus a coach selector that filters the entire dashboard down to one coach's book of clients.</div>
+        </div>
+        <div class="phase-status">
+          <div class="phase-progress"><div class="bar" style="width:0%"></div></div>
+          <div class="phase-pct">Up next</div>
+        </div>
+      </div>
+
+      <div class="phase pending">
+        <div class="phase-num">4</div>
+        <div class="phase-body">
+          <div class="title">Funnel &amp; churn reason</div>
+          <div class="desc">A visual onboarding → active → cancelled funnel showing first-month survival, plus a split of off-boarded clients into "burned out early" versus "finished then left".</div>
+        </div>
+        <div class="phase-status">
+          <div class="phase-progress"><div class="bar" style="width:0%"></div></div>
+          <div class="phase-pct">Queued</div>
+        </div>
+      </div>
+
+      <div class="phase pending">
+        <div class="phase-num">5</div>
+        <div class="phase-body">
+          <div class="title">Login &amp; AI assistant</div>
+          <div class="desc">Login gate so managers see everything and each coach sees only their own book. The AI assistant on the dashboard gets wired to real intelligence so it answers from live numbers.</div>
+        </div>
+        <div class="phase-status">
+          <div class="phase-progress"><div class="bar" style="width:0%"></div></div>
+          <div class="phase-pct">Queued</div>
+        </div>
+      </div>
+
+      <div class="phase pending">
+        <div class="phase-num">6</div>
+        <div class="phase-body">
+          <div class="title">Retention baseline &amp; finish</div>
+          <div class="desc">A daily retention snapshot starting 1 June so Ryan has a "this is where we started" view, plus week-in-program and price shown on every renewal-ready client.</div>
+        </div>
+        <div class="phase-status">
+          <div class="phase-progress"><div class="bar" style="width:0%"></div></div>
+          <div class="phase-pct">Final</div>
+        </div>
+      </div>
+    </div>
+  </section>
+
+  <!-- ALREADY BUILT -->
+  <section class="section">
+    <div class="section-tag">What's already live</div>
+    <h2>14 features you can use today</h2>
+    <p class="lead">Open the dashboard and these are all working right now against the current TRACKER snapshot.</p>
+
+    <div class="feature-list">
+      <div class="feat"><div class="icon">✓</div><div><div class="title">18 KPI tiles</div><div class="desc">Active book, programs, payments, retention — all in a 3×6 snapshot grid.</div></div></div>
+      <div class="feat"><div class="icon">✓</div><div><div class="title">Date range filter</div><div class="desc">Quick chips for Today / 7D / 30D / MTD / QTD / YTD plus custom dates.</div></div></div>
+      <div class="feat"><div class="icon">✓</div><div><div class="title">Click-through drill-downs</div><div class="desc">Every tile opens the full client list — searchable, sortable, CSV-exportable.</div></div></div>
+      <div class="feat"><div class="icon">✓</div><div><div class="title">Monthly calendar</div><div class="desc">Sign-ups, endings, and past-due all on one calendar. Click any day to drill in.</div></div></div>
+      <div class="feat"><div class="icon">✓</div><div><div class="title">All 10 sheet tabs</div><div class="desc">RAW, OFFBOARDED, ONBOARDING, CLIENT 121, KICKOFF, PROGRAMS — every tab has its own view.</div></div></div>
+      <div class="feat"><div class="icon">✓</div><div><div class="title">Auto-generated dashboards</div><div class="desc">Each tab analyses its own columns and builds the right charts and KPIs automatically.</div></div></div>
+      <div class="feat"><div class="icon">✓</div><div><div class="title">Cell-level filtering</div><div class="desc">Click any cell to filter the whole dashboard by that value instantly.</div></div></div>
+      <div class="feat"><div class="icon">✓</div><div><div class="title">Client 360 panel</div><div class="desc">Click any client ID to see their full record across every tab they appear in.</div></div></div>
+      <div class="feat"><div class="icon">✓</div><div><div class="title">Closer leaderboard</div><div class="desc">Sales-side ranking with retention percentage per closer.</div></div></div>
+      <div class="feat"><div class="icon">✓</div><div><div class="title">Programs ending soon</div><div class="desc">A live list of clients whose program is nearing its end.</div></div></div>
+      <div class="feat"><div class="icon">✓</div><div><div class="title">Recent additions</div><div class="desc">The freshest sign-ups, surfaced at a glance.</div></div></div>
+      <div class="feat"><div class="icon">✓</div><div><div class="title">Distribution charts</div><div class="desc">Status, program, country, and head coach — visual at a glance.</div></div></div>
+      <div class="feat"><div class="icon">✓</div><div><div class="title">1-minute auto-refresh</div><div class="desc">The dashboard re-reads its data source every 60 seconds with no page reload.</div></div></div>
+      <div class="feat"><div class="icon">✓</div><div><div class="title">AI assistant panel</div><div class="desc">Floating chat that already answers from the local snapshot — gets wired to live data in Phase 5.</div></div></div>
+    </div>
+  </section>
+
+  <!-- WHATS NEXT -->
+  <section class="section" id="whats-next">
+    <div class="section-tag">Up this week</div>
+    <h2>The features for the demo</h2>
+    <p class="lead">Priority order. The first three are the ones Jase named as critical for the mid-week demo, and they're already half-built because the underlying client data is in place.</p>
+
+    <div class="next-list">
+      <div class="next">
+        <div class="next-icon">01</div>
+        <div class="next-body">
+          <div class="title">Churn rate, retention rate, renewal rate</div>
+          <div class="desc">Three new headline cards on the top row. Same styling as the existing snapshot tiles — just the metrics Jase asked for in the call.</div>
+        </div>
+        <div class="next-eta">This week</div>
+      </div>
+      <div class="next">
+        <div class="next-icon">02</div>
+        <div class="next-body">
+          <div class="title">Off-boarding split — paying vs challenge</div>
+          <div class="desc">When 85 clients off-board this month, how many were paying clients and how many were one-month challenge clients? A KPI plus a simple visual breakdown.</div>
+        </div>
+        <div class="next-eta">This week</div>
+      </div>
+      <div class="next">
+        <div class="next-icon">03</div>
+        <div class="next-body">
+          <div class="title">Support coach leaderboard</div>
+          <div class="desc">A new ranking — separate from the sales closer table — showing each support coach's retention, churn, and renewal numbers. This is the incentive view.</div>
+        </div>
+        <div class="next-eta">This week</div>
+      </div>
+      <div class="next">
+        <div class="next-icon">04</div>
+        <div class="next-body">
+          <div class="title">Coach filter</div>
+          <div class="desc">A single dropdown that filters the entire dashboard down to one coach's book of clients — matching the per-coach filter views already in the spreadsheet.</div>
+        </div>
+        <div class="next-eta">This week</div>
+      </div>
+      <div class="next">
+        <div class="next-icon">05</div>
+        <div class="next-body">
+          <div class="title">First-month survival funnel</div>
+          <div class="desc">A simple visual showing what percent of clients make it from onboarding into the active program — the number Jase has been asking for.</div>
+        </div>
+        <div class="next-eta">This week</div>
+      </div>
+      <div class="next">
+        <div class="next-icon">06</div>
+        <div class="next-body">
+          <div class="title">Login &amp; retention baseline</div>
+          <div class="desc">Login for managers and coaches, plus the daily retention snapshot starting 1 June so Ryan has the "where we started" baseline to track against.</div>
+        </div>
+        <div class="next-eta">Next</div>
+      </div>
+    </div>
+  </section>
+
+  <!-- TIMELINE -->
+  <section class="section">
+    <div class="section-tag">Timeline</div>
+    <h2>The dates that matter</h2>
+    <p class="lead">Two anchors from the kick-off call.</p>
+
+    <div class="timeline">
+      <div class="tl-card current">
+        <div class="label">Today</div>
+        <div class="date">31 May 2026</div>
+        <div class="desc">Phase 2 in progress. Demo build is on track for later this week. Dashboard already running locally and on Vercel.</div>
+      </div>
+      <div class="tl-card">
+        <div class="label">Baseline starts</div>
+        <div class="date">1 June 2026</div>
+        <div class="desc">First daily retention snapshot stored so Ryan has a "this is where we started" benchmark to grow from.</div>
+      </div>
+      <div class="tl-card">
+        <div class="label">Demo target</div>
+        <div class="date">4–5 June 2026</div>
+        <div class="desc">Working demo with churn, retention, renewal, off-boarding split, support coach leaderboard, and coach filter — the priority five for Jase.</div>
+      </div>
+    </div>
+  </section>
+
+  <!-- ACCEPTANCE -->
+  <section class="section">
+    <div class="section-tag">Definition of done</div>
+    <h2>What "demo ready" means</h2>
+    <p class="lead">The nine checks from the spec. The demo is ready when every box is ticked.</p>
+
+    <div class="accept">
+      <div class="accept-item pending"><div class="check"></div><div class="text">Live "Last sync" timestamp that updates</div></div>
+      <div class="accept-item pending"><div class="check"></div><div class="text">Top row shows churn, retention, renewal, and off-boarded with the challenge-versus-paying split</div></div>
+      <div class="accept-item pending"><div class="check"></div><div class="text">Support coach leaderboard ranks coaches by retention</div></div>
+      <div class="accept-item pending"><div class="check"></div><div class="text">The whole dashboard can be filtered to one support coach</div></div>
+      <div class="accept-item pending"><div class="check"></div><div class="text">The funnel shows first-month survival percentage</div></div>
+      <div class="accept-item pending"><div class="check"></div><div class="text">Off-boarded clients are tagged "burned out" or "completed then left"</div></div>
+      <div class="accept-item pending"><div class="check"></div><div class="text">Login required — managers see everything, coaches see their own book</div></div>
+      <div class="accept-item pending"><div class="check"></div><div class="text">AI assistant returns the same churn number as the KPI card</div></div>
+      <div class="accept-item pending"><div class="check"></div><div class="text">Retention baseline captured starting 1 June for Ryan</div></div>
+    </div>
+  </section>
+
+  <footer>
+    <div class="src">Sources: 26 May 2026 build spec · live dashboard codebase · TRACKER — CLIENT SUCCESS spreadsheet</div>
+    <div>Better Body Academy — Internal progress report. Not for distribution outside the team.</div>
+  </footer>
+
+</div>
+
+</body>
+</html>

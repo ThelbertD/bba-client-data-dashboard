@@ -89,7 +89,11 @@ KEY = {
     "currency": "CURRENCY",
     "contract_value": "CONTRACT \nVALUE\n(Home Currency)",
     "cash_collected": "CASH \nCOLLECTED\n(Home Currency",
+    "periodic_payments": "PERIODIC PAYMENTS\n(Home Currency)",
     "origin_date": "ORIGIN_DATE",
+    "extra_weeks": "EXTRA_WEEKS",
+    "length_type": "LENGTH_TYPE",
+    "stripe_link": "STRIPE LINK",
 }
 def g(row, k):
     v = row.get(KEY[k], "")
@@ -226,6 +230,12 @@ def build(data, now=None):
     for r in data:
         end_d = parse_date(g(r, "end"))
         origin_d = parse_date(g(r, "origin_date"))
+        status_d = parse_date(g(r, "status_date"))
+        event_d = parse_date(g(r, "last_event_date"))
+        try:    extra_weeks = int(float(g(r, "extra_weeks"))) if g(r, "extra_weeks") else 0
+        except (TypeError, ValueError): extra_weeks = 0
+        try:    length_type = int(float(g(r, "length_type"))) if g(r, "length_type") and g(r, "length_type") != "N/A" else None
+        except (TypeError, ValueError): length_type = None
         clients.append({
             "id": g(r, "id"),
             "name": g(r, "name").title(),
@@ -237,6 +247,13 @@ def build(data, now=None):
             "closer": g(r, "closer").title(),
             "supportCoach": g(r, "support_coach").title(),
             "status": g(r, "status"),
+            "statusDate": status_d.strftime("%d %b %Y") if status_d else None,
+            "statusDateISO": status_d.strftime("%Y-%m-%d") if status_d else None,
+            "lastEvent": g(r, "last_event") or None,
+            "lastEventDate": event_d.strftime("%d %b %Y") if event_d else None,
+            "lastEventDateISO": event_d.strftime("%Y-%m-%d") if event_d else None,
+            "extraWeeks": extra_weeks,
+            "lengthType": length_type,
             "paymentStatus": g(r, "payment_status"),
             "paymentCadence": g(r, "payment_cadence"),
             "daysToEnd": parse_days(g(r, "days_to_end")),
@@ -246,6 +263,8 @@ def build(data, now=None):
             "originDateISO": origin_d.strftime("%Y-%m-%d") if origin_d else None,
             "contractValue": to_float(g(r, "contract_value")) or 0,
             "cashCollected": to_float(g(r, "cash_collected")) or 0,
+            "price": to_float(g(r, "periodic_payments")) or 0,
+            "stripeLink": g(r, "stripe_link") or None,
         })
 
     return {

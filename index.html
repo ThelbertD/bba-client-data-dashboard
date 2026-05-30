@@ -274,6 +274,47 @@
   .section-title .pill{background:var(--accent-dim);color:var(--accent-soft);
     padding:3px 10px;border-radius:100px;font-size:10px;letter-spacing:.1em;font-family:inherit;font-weight:800}
 
+  /* Headline KPIs — 4 cards across the top */
+  .headline-row{display:grid;grid-template-columns:repeat(4,1fr);gap:14px;margin-bottom:8px}
+  .headline{background:var(--panel);border:1px solid var(--line);border-radius:14px;
+    padding:18px 20px;position:relative;overflow:hidden;cursor:pointer;
+    transition:transform .15s,border-color .15s,box-shadow .15s;text-align:left;
+    font-family:inherit;color:var(--white);min-height:120px;display:flex;flex-direction:column;gap:6px}
+  .headline:hover{border-color:var(--accent);transform:translateY(-2px);box-shadow:0 10px 28px rgba(0,0,0,.4)}
+  .headline::before{content:"";position:absolute;top:0;left:0;right:0;height:3px;background:var(--accent);opacity:.7}
+  .headline.danger::before{background:var(--bad)}
+  .headline.good::before{background:var(--good)}
+  .headline.warn::before{background:var(--warn)}
+  .headline .h-label{font-size:11px;font-weight:800;letter-spacing:.1em;text-transform:uppercase;color:var(--grey);display:flex;align-items:center;gap:8px}
+  .headline .h-label .h-ico{width:22px;height:22px;border-radius:6px;background:var(--accent-dim);color:var(--accent);
+    display:flex;align-items:center;justify-content:center;font-size:13px;font-family:'Archivo Black'}
+  .headline.danger .h-ico{background:var(--bad-dim);color:#fca5a5}
+  .headline.good .h-ico{background:var(--good-dim);color:#86efac}
+  .headline.warn .h-ico{background:var(--warn-dim);color:#fcd34d}
+  .headline .h-value{font-family:'Archivo Black';font-size:38px;color:var(--white);line-height:1;font-variant-numeric:tabular-nums}
+  .headline.danger .h-value{color:#fca5a5}
+  .headline.good .h-value{color:#86efac}
+  .headline.warn .h-value{color:#fcd34d}
+  .headline .h-sub{font-size:11px;color:var(--grey);font-weight:600;margin-top:auto;display:flex;align-items:center;gap:6px;flex-wrap:wrap}
+  .headline .h-sub strong{color:var(--white)}
+
+  /* Off-boarding split card — two segments inside one card */
+  .headline-split{flex-direction:column}
+  .headline-split .h-segs{display:grid;grid-template-columns:1fr 1fr;gap:6px;margin-top:2px}
+  .headline-split .seg{background:var(--bg);border:1px solid var(--line);border-radius:8px;padding:8px 10px}
+  .headline-split .seg .seg-label{font-size:9px;font-weight:800;letter-spacing:.08em;text-transform:uppercase;color:var(--grey);margin-bottom:2px}
+  .headline-split .seg .seg-value{font-family:'Archivo Black';font-size:18px;color:var(--white);line-height:1;font-variant-numeric:tabular-nums}
+  .headline-split .seg.paying{border-color:var(--warn);box-shadow:inset 3px 0 0 var(--warn)}
+  .headline-split .seg.paying .seg-value{color:#fcd34d}
+  .headline-split .seg.challenge{border-color:var(--accent);box-shadow:inset 3px 0 0 var(--accent)}
+  .headline-split .seg.challenge .seg-value{color:var(--accent-soft)}
+  .headline-split .h-bar{height:6px;background:var(--bg);border-radius:3px;overflow:hidden;display:flex;margin-top:2px}
+  .headline-split .h-bar .b-paying{background:var(--warn);height:100%}
+  .headline-split .h-bar .b-challenge{background:var(--accent);height:100%}
+
+  @media (max-width:1100px){.headline-row{grid-template-columns:repeat(2,1fr)}}
+  @media (max-width:600px){.headline-row{grid-template-columns:1fr}.headline .h-value{font-size:30px}}
+
   /* KPI grid — 6 columns × 3 rows */
   .kpi-grid{display:grid;grid-template-columns:repeat(6,1fr);gap:10px}
   .kpi{background:var(--panel);border:1px solid var(--line);border-radius:12px;
@@ -675,6 +716,9 @@
     <button class="clear" id="filterClear">Clear filter</button>
   </div>
 
+  <div class="section-title">Headline KPIs <span class="pill">The 4 Jase watches</span></div>
+  <div class="headline-row" id="headlineRow"></div>
+
   <div class="section-title">Month-to-date snapshot <span class="pill">18 metrics</span></div>
   <div class="kpi-grid" id="kpiGrid"></div>
 
@@ -1053,6 +1097,22 @@ function compute(clients){
 
   const activeRate = total ? (activeArr.length / total * 100) : 0;
 
+  /* --- Headline metrics (the 4 Jase watches) ---
+     These use LIFETIME totals across the filtered cohort, not a separate window. */
+  const cancelledArr = clients.filter(c => c.status === 'CANCELLED');
+  const everCount = activeArr.length + cancelledArr.length;
+  const churnRate    = everCount ? (cancelledArr.length / everCount * 100) : 0;
+  const retentionRate= 100 - churnRate;
+  // Renewal: clients with extraWeeks > 0 have renewed at least once. Denominator:
+  // clients past onboarding (i.e., have had a chance to renew).
+  const pastOnboarding = clients.filter(c => c.status !== 'ACTIVE_ONBOARDING');
+  const renewedArr = pastOnboarding.filter(c => (c.extraWeeks || 0) > 0);
+  const renewalRate = pastOnboarding.length ? (renewedArr.length / pastOnboarding.length * 100) : 0;
+  // Off-boarding split: challenge clients are program=CHALLENGE OR lengthType=4
+  const isChallenge = (c) => (c.program === 'CHALLENGE' || c.lengthType === 4);
+  const offChallenge = cancelledArr.filter(isChallenge).length;
+  const offPaying    = cancelledArr.length - offChallenge;
+
   const kpis = [
     { key:'total_clients',  label:'Total Clients',    value: total,                                  format:'int' },
     { key:'active',         label:'Active',           value: activeArr.length,                       format:'int',  highlight:'hero' },
@@ -1086,6 +1146,19 @@ function compute(clients){
               cashCollectedTotal: Math.round(cashTotal),
               avgContract: Math.round(avgContract),
               endingIn30: ending30, pastDue },
+    headline: {
+      churnRate: Math.round(churnRate * 10) / 10,
+      churnLost: cancelledArr.length,
+      churnBase: everCount,
+      retentionRate: Math.round(retentionRate * 10) / 10,
+      retentionKept: activeArr.length,
+      renewalRate: Math.round(renewalRate * 10) / 10,
+      renewed: renewedArr.length,
+      renewalEligible: pastOnboarding.length,
+      offTotal: cancelledArr.length,
+      offPaying,
+      offChallenge,
+    },
     kpis,
     charts: {
       byProgram: topN(byProgram, 6),
@@ -1133,6 +1206,71 @@ const KPI_FILTERS = {
 };
 
 /* --- renderers --- */
+function renderHeadline(metrics){
+  const h = metrics.headline;
+  const row = $('#headlineRow');
+  if(!h || !row) return;
+  const offPayingPct = h.offTotal ? Math.round(h.offPaying / h.offTotal * 100) : 50;
+  const offChallengePct = 100 - offPayingPct;
+  row.innerHTML = `
+    <button class="headline danger" data-headline="churn" type="button">
+      <div class="h-label"><span class="h-ico">↓</span>Churn rate</div>
+      <div class="h-value">${fmtPct(h.churnRate)}</div>
+      <div class="h-sub"><strong>${fmtInt(h.churnLost)}</strong> cancelled of <strong>${fmtInt(h.churnBase)}</strong> ever in this cohort</div>
+    </button>
+    <button class="headline good" data-headline="retention" type="button">
+      <div class="h-label"><span class="h-ico">●</span>Retention rate</div>
+      <div class="h-value">${fmtPct(h.retentionRate)}</div>
+      <div class="h-sub"><strong>${fmtInt(h.retentionKept)}</strong> retained of <strong>${fmtInt(h.churnBase)}</strong></div>
+    </button>
+    <button class="headline" data-headline="renewal" type="button">
+      <div class="h-label"><span class="h-ico">↻</span>Renewal rate</div>
+      <div class="h-value">${fmtPct(h.renewalRate)}</div>
+      <div class="h-sub"><strong>${fmtInt(h.renewed)}</strong> renewed of <strong>${fmtInt(h.renewalEligible)}</strong> past onboarding · <span title="LAST_EVENT_TYPE in source sheet is currently single-value, so renewal is detected via EXTRA_WEEKS &gt; 0">ⓘ proxy</span></div>
+    </button>
+    <button class="headline warn headline-split" data-headline="offboard" type="button">
+      <div class="h-label"><span class="h-ico">→</span>Off-boarding · ${fmtInt(h.offTotal)}</div>
+      <div class="h-segs">
+        <div class="seg paying">
+          <div class="seg-label">Paying</div>
+          <div class="seg-value">${fmtInt(h.offPaying)}</div>
+        </div>
+        <div class="seg challenge">
+          <div class="seg-label">Challenge</div>
+          <div class="seg-value">${fmtInt(h.offChallenge)}</div>
+        </div>
+      </div>
+      <div class="h-bar"><div class="b-paying" style="width:${offPayingPct}%"></div><div class="b-challenge" style="width:${offChallengePct}%"></div></div>
+    </button>
+  `;
+  row.querySelectorAll('[data-headline]').forEach(btn => {
+    btn.addEventListener('click', () => openHeadlineDrill(btn.dataset.headline));
+  });
+}
+
+function openHeadlineDrill(key){
+  // Synthesise a one-shot KPI_FILTERS entry and open the drill-down panel
+  const map = {
+    churn:     { kpiKey:'cancelled',    label:'Cancelled · churn driver',           icon:'↓' },
+    retention: { kpiKey:'active',       label:'Retained · still active',            icon:'●' },
+    renewal:   { kpiKey:'__renewed__',  label:'Renewed (extra weeks > 0)',          icon:'↻' },
+    offboard:  { kpiKey:'cancelled',    label:'Off-boarded · paying + challenge',   icon:'→' },
+  };
+  const m = map[key];
+  if(!m) return;
+  if(m.kpiKey === '__renewed__'){
+    // ad-hoc: register a one-shot filter then open
+    KPI_FILTERS.__renewed__ = {
+      label: m.label, icon: m.icon,
+      filter: c => (c.extraWeeks || 0) > 0,
+      sort: (a,b) => (b.extraWeeks||0) - (a.extraWeeks||0)
+    };
+    openDrillDown('__renewed__');
+  } else {
+    openDrillDown(m.kpiKey);
+  }
+}
+
 function renderKpis(metrics){
   const grid = $('#kpiGrid');
   grid.innerHTML = metrics.kpis.map(k => {
@@ -1268,6 +1406,7 @@ function render(){
     $('#filterSummaryCount').textContent = `${clients.length.toLocaleString()} clients`;
   }
 
+  renderHeadline(metrics);
   renderKpis(metrics);
   renderCharts(metrics);
   renderCalendar();
