@@ -20,15 +20,15 @@ A live, login-protected view of retention, churn, and renewals — sourced from 
 
 28 features in the spec. The metrics layer Jase named as critical for the demo — churn, retention, renewal, off-boarding split, plus the per-coach view — all shipped this week. Remaining work is the funnel, the churn-reason tag, and the login + n8n live pipeline.
 
-**Overall delivery: 78%** *(counting partials as half-credit)*
+**Overall delivery: 81%** *(counting partials as half-credit)*
 
 ```
-██████████████████████████████████████████████░░░░░░░░░░░░  78%
+████████████████████████████████████████████████░░░░░░░░░░░░  81%
 ```
 
 | Status | Count | Notes |
 |---|---|---|
-| ✅ **Delivered** | **20** | Built & visible in the dashboard |
+| ✅ **Delivered** | **21** | Built & visible in the dashboard |
 | 🟡 **In progress** | **2** | Wired, awaiting final connection |
 | 🔵 **Lined up** | **3** | Next on the build queue |
 | 🔴 **Awaiting input** | **3** | Need access keys or accounts |
@@ -54,15 +54,15 @@ Dashboard side is ready — it polls its data source every minute and is hot-swa
 ### 🔵 Phase 4 — Funnel & churn reason — **Up next**
 Onboarding → Active → Cancelled funnel with first-month survival, plus a "burned out early" vs "completed then left" tag on each off-boarded client. Up next once Phase 0 status-date trigger is in.
 
-### 🔴 Phase 5 — Login & AI assistant — **15%**
-Supabase login so managers see all and coaches see only their own book. The dashboard chat widget exists and answers from local data — Phase 5 wires it to live Claude intelligence so it explains the numbers in plain English.
+### 🔴 Phase 5 — Login & AI assistant — **25%**
+Supabase login so managers see all and coaches see only their own book. The dashboard chat widget answers from live data and now matches the KPI cards exactly — Phase 5 wires it to Claude so it can explain the numbers in plain English beyond keyword matching.
 
 ### 🔴 Phase 6 — Retention baseline & finish — **Final**
 A daily retention snapshot starting 1 June so Ryan has a "this is where we started" benchmark, plus week-in-program and price shown on every renewal-ready client row.
 
 ---
 
-## ★ Just shipped this week — 6 new features for Jase's demo
+## ★ Just shipped this week — 7 new features for Jase's demo
 
 The features named in the kickoff call as critical for the Phase 2 + Phase 3 demo. All live in the dashboard right now.
 
@@ -72,6 +72,7 @@ The features named in the kickoff call as critical for the Phase 2 + Phase 3 dem
 4. **★ Off-boarding split · headline KPI** — Single card showing total off-boarded plus a visual paying-vs-challenge bar split.
 5. **★ Support coach leaderboard** — Every coach ranked by retention with active / cancelled / contract value side by side.
 6. **★ Whole-dashboard coach filter** — Pick a coach from the top selector and every KPI, chart, calendar, and table narrows to their book.
+7. **★ Chat answers match the KPI cards** — Ask "what's our churn rate?" in the chat and the number matches the headline card exactly, by reading from the same source. *Closes demo acceptance criterion: "AI assistant returns the same churn number as the KPI card."*
 
 ---
 
@@ -132,10 +133,10 @@ The nine checks from the spec. The demo is ready when every box is ticked.
 - [ ] The funnel shows first-month survival percentage
 - [ ] Off-boarded clients are tagged "burned out" or "completed then left"
 - [ ] Login required — managers see everything, coaches see their own book
-- [ ] AI assistant returns the same churn number as the KPI card
+- [x] AI assistant returns the same churn number as the KPI card
 - [ ] Retention baseline captured starting 1 June for Ryan
 
-> **3 of 9 done · 6 to go before the demo ships**
+> **4 of 9 done · 5 to go before the demo ships**
 
 ---
 
