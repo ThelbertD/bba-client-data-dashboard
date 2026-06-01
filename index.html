@@ -941,11 +941,12 @@
   <div class="chat-messages" id="chatMessages"></div>
 
   <div class="chat-suggestions" id="chatSuggestions">
-    <button data-q="How many active clients?">Active clients?</button>
+    <button data-q="What's our churn rate?">Churn rate</button>
+    <button data-q="What's our retention rate?">Retention rate</button>
+    <button data-q="What's our renewal rate?">Renewal rate</button>
+    <button data-q="Off-boarding split">Off-boarding</button>
     <button data-q="Top closer this month">Top closer</button>
     <button data-q="Programs ending soon">Ending soon</button>
-    <button data-q="Total contract value">Revenue</button>
-    <button data-q="Breakdown by program">By program</button>
   </div>
 
   <form class="chat-input" id="chatForm" autocomplete="off">
@@ -2607,6 +2608,34 @@ const RULES = [
   // Help / hello
   [/^(hi|hello|hey|help|what can you do)/i, () => `Hey 👋 I'm the BBA data assistant. ${suggestQuestions()}`],
 
+  // ----- Headline KPIs — these MUST match the cards at the top of the dashboard -----
+  // Match "churn rate", "what's our churn", "current churn", "churn %" etc.
+  [/churn ?(rate|%|percentage|number)|what.?s (our|the) churn|current churn/i, (_,d) => {
+    const h = d.headline;
+    if(!h) return "Churn rate isn't computed yet — the dashboard is still loading.";
+    return `Churn rate is <strong>${fmtPct(h.churnRate)}</strong> — ${n(h.churnLost)} cancelled out of ${n(h.churnBase)} clients ever in this cohort. (Same number as the headline KPI card; denominator is active + cancelled, excluding clients still in onboarding.)`;
+  }],
+
+  [/retention ?(rate|%|percentage|number)|what.?s (our|the) retention|current retention/i, (_,d) => {
+    const h = d.headline;
+    if(!h) return "Retention rate isn't computed yet — the dashboard is still loading.";
+    return `Retention rate is <strong>${fmtPct(h.retentionRate)}</strong> — ${n(h.retentionKept)} still active out of ${n(h.churnBase)} clients ever in this cohort. (Same number as the headline KPI card.)`;
+  }],
+
+  [/renewal ?(rate|%|percentage|number)|what.?s (our|the) renewal|current renewal/i, (_,d) => {
+    const h = d.headline;
+    if(!h) return "Renewal rate isn't computed yet — the dashboard is still loading.";
+    return `Renewal rate is <strong>${fmtPct(h.renewalRate)}</strong> — ${n(h.renewed)} renewed (extra weeks > 0) out of ${n(h.renewalEligible)} clients past onboarding. (Proxy: detected via EXTRA_WEEKS in the sheet because LAST_EVENT_TYPE is single-value.)`;
+  }],
+
+  [/off ?board|off ?boarding|paying.*challenge|challenge.*paying|split/i, (_,d) => {
+    const h = d.headline;
+    if(!h) return "Off-boarding split isn't computed yet — the dashboard is still loading.";
+    const payingPct = h.offTotal ? (h.offPaying / h.offTotal * 100) : 0;
+    const challengePct = h.offTotal ? (h.offChallenge / h.offTotal * 100) : 0;
+    return `Off-boarded: <strong>${n(h.offTotal)}</strong> total — ${n(h.offPaying)} paying clients (${fmtPct(payingPct)}) vs ${n(h.offChallenge)} challenge clients (${fmtPct(challengePct)}). (Same numbers as the headline KPI card.)`;
+  }],
+
   // Active / total
   [/(how many )?(active|currently active) (clients?|members?|on the books)?/i, (_,d) =>
     `You have ${n(d.totals.active)} active clients right now — ${n(d.totals.coaching)} in active coaching plus ${n(d.totals.onboarding)} still onboarding. That's a ${p(d.totals.activeRate)} active rate across ${n(d.totals.total)} total client records.`],
@@ -2614,8 +2643,12 @@ const RULES = [
   [/(total|how many) (clients?|members?|people)/i, (_,d) =>
     `${n(d.totals.total)} total clients in the database — ${n(d.totals.active)} currently active, ${n(d.totals.cancelled)} cancelled all-time.`],
 
-  [/cancell?ed|churn/i, (_,d) =>
-    `${n(d.totals.cancelled)} cancelled clients all-time (${p(d.totals.cancelled / d.totals.total * 100)} of the database).`],
+  // "cancelled" or generic "churn" without "rate" — falls through to the headline rule above first
+  [/cancell?ed|churn/i, (_,d) => {
+    const h = d.headline;
+    if(h) return `${n(h.churnLost)} cancelled clients (churn rate <strong>${fmtPct(h.churnRate)}</strong>, same as the headline card). Of those, ${n(h.offPaying)} were paying clients and ${n(h.offChallenge)} were challenge clients.`;
+    return `${n(d.totals.cancelled)} cancelled clients all-time (${p(d.totals.cancelled / d.totals.total * 100)} of the database).`;
+  }],
 
   [/onboard/i, (_,d) =>
     `${n(d.totals.onboarding)} clients currently in onboarding (status: ACTIVE_ONBOARDING).`],
