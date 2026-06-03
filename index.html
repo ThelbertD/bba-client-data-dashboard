@@ -344,8 +344,8 @@
   .kpi .value{font-family:'Archivo Black';font-size:28px;color:var(--white);line-height:1;
     font-variant-numeric:tabular-nums}
   .kpi.rate .value{color:var(--accent)}
-  .kpi.hero{background:linear-gradient(135deg,var(--panel) 0%,var(--panel2) 100%);
-    border-color:var(--accent);box-shadow:0 0 0 3px var(--accent-dim)}
+  /* Hero KPI: blue number only — no permanent border (the border is reserved
+     for the click/selected state below) */
   .kpi.hero .value{color:var(--accent)}
   /* Clickable KPI tiles */
   .kpi.clickable{cursor:pointer}
@@ -354,7 +354,8 @@
     opacity:0;transition:opacity .15s,transform .15s}
   .kpi.clickable:hover::after{opacity:.85;transform:translateX(2px)}
   .kpi.clickable:focus-visible{outline:2px solid var(--accent);outline-offset:2px}
-  .kpi.active-tile{border-color:var(--accent);box-shadow:0 0 0 3px var(--accent-dim)}
+  /* Selected/clicked tile — blue border + glow, only while drill-down is open */
+  .kpi.active-tile{border-color:var(--accent);box-shadow:0 0 0 3px var(--accent-dim);background:linear-gradient(135deg,var(--panel) 0%,var(--panel2) 100%)}
 
   /* Charts */
   .charts{display:grid;grid-template-columns:1fr 1fr;gap:16px;margin-top:16px}
