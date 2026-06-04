@@ -29,10 +29,12 @@ TABS = [
     ("CLIENT_NOTES",              "182322117"),
     ("DATA VALIDATION DROPDOWNS", "801848151"),
     ("OFFBOARDED",                "775534642"),
-    ("CLIENT 121",                "1462666945"),
-    ("CHALLENGE UPGRADE",         "1853599286"),
     ("ONBOARDING",                "986032430"),
-    ("KICKOFF CALLS",             "686328974"),
+    ("MOMENTUM",                  "1462666945"),   # was CLIENT 121
+    ("CELEBRATION",               "847524447"),    # new
+    ("CHALLENGE UPGRADE",         "596452103"),    # gid changed
+    ("CATCHUP CALL",              "1059913481"),   # new
+    ("KICKOFF",                   "686328974"),    # was KICKOFF CALLS
     ("PROGRAMS",                  "340082301"),
     ("RETREAT",                   "2102321023"),
 ]

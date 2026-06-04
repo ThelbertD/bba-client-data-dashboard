@@ -1,6 +1,6 @@
 {
   "source": "TRACKER - CLIENT SUCCESS (RAW)",
-  "syncedAt": "2026-06-04T19:56:04.400416+00:00",
+  "syncedAt": "2026-06-04T20:04:09.434175+00:00",
   "range": {
     "label": "All-time + MTD",
     "from": "2026-06-01",
@@ -155686,107 +155686,6 @@
       ],
       "rowCount": 670
     },
-    "CLIENT 121": {
-      "headers": [
-        "NAME_PTD",
-        "NAME_FB",
-        "SUPPORT_COACH",
-        "PROGRAM",
-        "HOST_NAME",
-        "DATE_APPOINTMENT (PST)",
-        "CALL NOTES - MOMENTUM COACH"
-      ],
-      "rows": [
-        [
-          "CARRIE WALTERS",
-          "",
-          "",
-          "",
-          "NICKY CONNOLLY",
-          "Monday, Jun 1 2026 - 9:00 p.m.",
-          ""
-        ],
-        [
-          "BETTY FIUME",
-          "FIUME-LOANNIDIS BETTY",
-          "OB TEAM",
-          "CHALLENGE",
-          "DOM FISCHER",
-          "Tuesday, Jun 2 2026 - 4:15 a.m.",
-          ""
-        ],
-        [
-          "AMANDA BROWN",
-          "AMANDA BROWN",
-          "JEREMIAH BARREDO",
-          "IGNITION",
-          "NICKY CONNOLLY",
-          "Tuesday, Jun 2 2026 - 7:30 p.m.",
-          ""
-        ],
-        [
-          "HELEN BETTERIDGE",
-          "HELEN BETTERIDGE",
-          "OB TEAM",
-          "CHALLENGE",
-          "DOM FISCHER",
-          "Wednesday, Jun 3 2026 - 12:00 a.m.",
-          ""
-        ],
-        [
-          "KELLY MICALLEF",
-          "KELLY MICALLEF",
-          "PATRICIA MALONZO",
-          "IGNITION",
-          "NICKY CONNOLLY",
-          "Thursday, Jun 4 2026 - 12:15 a.m.",
-          "We also discussed getting support at home. I suggested she ask her husband not to cook her steak in butter or oil, and to explain why this change is important to her so he can support her goals.\nI reinforced that there are 21 meals in a week, and she has control over 14 of them. We agreed that she will focus on taking more ownership of her food choices and seek support from her husband to help reduce calories in evening meals.\nFollow-up: 4/6 @ 5:15"
-        ],
-        [
-          "ROCHELLE QUINLAN",
-          "ROCHELLE QUINLAN",
-          "KERT ACOT",
-          "IGNITION",
-          "NICKY CONNOLLY",
-          "Wednesday, Jun 3 2026 - 1:00 a.m.",
-          "We discussed ways to increase her protein intake and focus on consistency. purposefully increasing her daily steps and has ordered resistance bands to begin home workouts when they arrive tomorrow. has started tracking her food and meal prepping. will also attend a coaching call tomorrow to become more involved and engaged"
-        ],
-        [
-          "KELLY MICALLEF",
-          "",
-          "",
-          "",
-          "NICKY CONNOLLY",
-          "2026-06-11 00:15:00",
-          ""
-        ]
-      ],
-      "rowCount": 7
-    },
-    "CHALLENGE UPGRADE": {
-      "headers": [
-        "<!DOCTYPE html><html lang=\"fil\"><head><meta name=\"description\" content=\"Word processing",
-        "mga pagtatanghal at mga spreadsheet sa web\"><meta name=\"viewport\" content=\"width=device-width",
-        "initial-scale=1.0",
-        "maximum-scale=1.0",
-        "minimum-scale=1.0",
-        "user-scalable=0\"><link rel=\"shortcut icon\" href=\"//docs.google.com/favicon.ico\"><title>Hindi Nahanap ang Page</title><meta name=\"referrer\" content=\"origin\"><link href=\"//fonts.googleapis.com/css?family=Product+Sans\" rel=\"stylesheet\" type=\"text/css\" nonce=\"z0_idda89ZPFK2oscr5DPA\"><style nonce=\"z0_idda89ZPFK2oscr5DPA\">#drive-logo{margin:18px 0;position:absolute;white-space:nowrap}.docs-drivelogo-img{background-image:url(//ssl.gstatic.com/images/branding/googlelogo/1x/googlelogo_color_116x41dp.png);-webkit-background-size:116px 41px;background-size:116px 41px;display:inline-block;height:41px;vertical-align:bottom;width:116px}.docs-drivelogo-text{color:var(--gm3-sys-color-on-surface",
-        "#1f1f1f);display:inline-block;opacity:.54;text-decoration:none;font-family:Product Sans",
-        "Arial",
-        "Helvetica",
-        "sans-serif;font-size:32px;text-rendering:optimizeLegibility;position:relative;top:-6px;left:-7px;-webkit-font-smoothing:antialiased;-moz-osx-font-smoothing:grayscale}@media (-webkit-min-device-pixel-ratio:1.5)",
-        "(min-resolution:144dpi){.docs-drivelogo-img{background-image:url(//ssl.gstatic.com/images/branding/googlelogo/2x/googlelogo_color_116x41dp.png)}}.goog-inline-block{position:relative;display:-moz-inline-box;display:inline-block}* html .goog-inline-block{display:inline}:first-child+html .goog-inline-block{display:inline}sentinel{}</style><style type=\"text/css\" nonce=\"z0_idda89ZPFK2oscr5DPA\">body {background-color: #fff; font-family: Arial",
-        "sans-serif; font-size: 13px; margin: 0; padding: 0;}a",
-        "a:link",
-        "a:visited {color: #112ABB;}</style><style type=\"text/css\" nonce=\"z0_idda89ZPFK2oscr5DPA\">.errorMessage {font-size: 12pt; font-weight: bold; line-height: 150%;}</style></head><body><div id=\"outerContainer\"><div id=\"innerContainer\"><div style=\"position: absolute; top: -80px;\"><div style=\"margin: 18px 0; position: absolute; white-space: nowrap;\"><a href=\"//support.google.com/docs/\"><img height=\"35px\" src=\"//ssl.gstatic.com/docs/common/product/spreadsheets_lockup2.png\" alt=\"Logo ng Google\"/></a></div></div><div align=\"center\"><p class=\"errorMessage\" style=\"padding-top: 50px\">Paumanhin",
-        "hindi mabuksan ang file sa oras na ito.</p><p> Pakitingnan kung tama ang address at subukan ulit.</p><div style=\"background: #F0F6FF; border: 1px solid black; margin-top: 35px; padding: 10px 125px; width: 300px;\"><p><strong>Kumuha ng mga bagay-bagay na ginawa sa Google Drive</strong></p><p>Ginagawang mas madali ng Apps sa Google Drive ang lumikha",
-        "mag-imbak at magbahagi ng mga online na dokumento",
-        "spreadsheet",
-        "mga pagtatanghal at marami pang iba.</p><p>Matuto pa sa<a href=\"https://drive.google.com/start/apps\">drive.google.com/start/apps</a>.</p></div></div></div></div></body><style nonce=\"z0_idda89ZPFK2oscr5DPA\">html {height: 100%; overflow: auto;}body {height: 100%; overflow: auto;}#outerContainer {margin: auto; max-width: 750px;}#innerContainer {margin-bottom: 20px; margin-left: 40px; margin-right: 40px; margin-top: 80px; position: relative;}</style></html>"
-      ],
-      "rows": [],
-      "rowCount": 0
-    },
     "ONBOARDING": {
       "headers": [
         "NAME",
@@ -160412,7 +160311,185 @@
       ],
       "rowCount": 219
     },
-    "KICKOFF CALLS": {
+    "MOMENTUM": {
+      "headers": [
+        "NAME_PTD",
+        "NAME_FB",
+        "SUPPORT_COACH",
+        "PROGRAM",
+        "HOST_NAME",
+        "DATE_APPOINTMENT (PST)",
+        "CALL NOTES - MOMENTUM COACH"
+      ],
+      "rows": [
+        [
+          "CARRIE WALTERS",
+          "",
+          "",
+          "",
+          "NICKY CONNOLLY",
+          "Monday, Jun 1 2026 - 9:00 p.m.",
+          ""
+        ],
+        [
+          "BETTY FIUME",
+          "FIUME-LOANNIDIS BETTY",
+          "OB TEAM",
+          "CHALLENGE",
+          "DOM FISCHER",
+          "Tuesday, Jun 2 2026 - 4:15 a.m.",
+          ""
+        ],
+        [
+          "AMANDA BROWN",
+          "AMANDA BROWN",
+          "JEREMIAH BARREDO",
+          "IGNITION",
+          "NICKY CONNOLLY",
+          "Tuesday, Jun 2 2026 - 7:30 p.m.",
+          ""
+        ],
+        [
+          "HELEN BETTERIDGE",
+          "HELEN BETTERIDGE",
+          "OB TEAM",
+          "CHALLENGE",
+          "DOM FISCHER",
+          "Wednesday, Jun 3 2026 - 12:00 a.m.",
+          ""
+        ],
+        [
+          "KELLY MICALLEF",
+          "KELLY MICALLEF",
+          "PATRICIA MALONZO",
+          "IGNITION",
+          "NICKY CONNOLLY",
+          "Thursday, Jun 4 2026 - 12:15 a.m.",
+          "We also discussed getting support at home. I suggested she ask her husband not to cook her steak in butter or oil, and to explain why this change is important to her so he can support her goals.\nI reinforced that there are 21 meals in a week, and she has control over 14 of them. We agreed that she will focus on taking more ownership of her food choices and seek support from her husband to help reduce calories in evening meals.\nFollow-up: 4/6 @ 5:15"
+        ],
+        [
+          "ROCHELLE QUINLAN",
+          "ROCHELLE QUINLAN",
+          "KERT ACOT",
+          "IGNITION",
+          "NICKY CONNOLLY",
+          "Wednesday, Jun 3 2026 - 1:00 a.m.",
+          "We discussed ways to increase her protein intake and focus on consistency. purposefully increasing her daily steps and has ordered resistance bands to begin home workouts when they arrive tomorrow. has started tracking her food and meal prepping. will also attend a coaching call tomorrow to become more involved and engaged"
+        ],
+        [
+          "KELLY MICALLEF",
+          "",
+          "",
+          "",
+          "NICKY CONNOLLY",
+          "2026-06-11 00:15:00",
+          ""
+        ]
+      ],
+      "rowCount": 7
+    },
+    "CELEBRATION": {
+      "headers": [
+        "NAME_PTD",
+        "NAME_FB",
+        "SUPPORT_COACH",
+        "PROGRAM",
+        "HOST_NAME",
+        "DATE_APPOINTMENT (PST)",
+        "TARGET ACTION: EXTENSION?",
+        "CALL NOTES - MOMENTUM COACH"
+      ],
+      "rows": [
+        [
+          "TEST",
+          "TEST",
+          "IGGY DOMINGO",
+          "IGNITION",
+          "DOM FISCHER",
+          "Monday, May 25 2026 - 11:45 p.m.",
+          "",
+          "TEST"
+        ]
+      ],
+      "rowCount": 1
+    },
+    "CHALLENGE UPGRADE": {
+      "headers": [
+        "NAME_PTD",
+        "NAME_FB",
+        "HOST_NAME",
+        "DATE_APPOINTMENT (PST)",
+        "TARGET ACTION: UPGRADE?",
+        "CALL NOTES - CLOSER"
+      ],
+      "rows": [
+        [
+          "LEAH FARRUGIA",
+          "LEAH FARRUGIA",
+          "DOM FISCHER",
+          "Monday, May 25 2026 - 11:45 p.m.",
+          "NO",
+          "I discussed with her to focus on a substitution for afternoon sugar cravings, protein bar, protein shake etc. plus she wants to start the day with a high protein meal. Please hammer her with this this week a couple times. Ill set another call up with her at the end of this week."
+        ],
+        [
+          "HELEN BETTERIDGE",
+          "HELEN BETTERIDGE",
+          "DOM FISCHER",
+          "Wednesday, Jun 3 2026 - 12:00 a.m.",
+          "NO",
+          ""
+        ],
+        [
+          "KYLLIE BRANNSTROM",
+          "KYLLIE BRANNSTROM",
+          "DOM FISCHER",
+          "Saturday, May 30 2026 - 11:00 p.m.",
+          "NO",
+          "partner obj, pitched her 6 months 250 and 12 months 200, she has 24h to decide. Check in with her tomorrow. If no please offboard"
+        ],
+        [
+          "BETTY FIUME",
+          "FIUME-LOANNIDIS BETTY",
+          "DOM FISCHER",
+          "Tuesday, Jun 2 2026 - 4:15 a.m.",
+          "NO",
+          "will focus on not snacking anything else at night outside of: popcorn, paddle pop ice, wicked sisters or greek joighurt and strawberries. Please hold her accountable to that. Final decision on friday. offered 6 months 200 fort"
+        ],
+        [
+          "RACHEL MEALOR",
+          "RACHEL MEALOR",
+          "DOM FISCHER",
+          "Sunday, May 31 2026 - 11:00 p.m.",
+          "NO",
+          "not in much pain, would like to have lost a bit more weight, but partied and didnt follow the plan as tight as she should have so knows why."
+        ]
+      ],
+      "rowCount": 5
+    },
+    "CATCHUP CALL": {
+      "headers": [
+        "NAME_PTD",
+        "NAME_FB",
+        "SUPPORT_COACH",
+        "HOST_NAME",
+        "DATE_APPOINTMENT (PST)",
+        "TARGET ACTION: REFERRAL?",
+        "CALL NOTES - CLOSER"
+      ],
+      "rows": [
+        [
+          "MICHELLE SEAMONS",
+          "TEST",
+          "SAM FUENTES",
+          "DOM FISCHER",
+          "Tuesday, Jun 2 2026 - 11:30 p.m.",
+          "YES",
+          "TEST"
+        ]
+      ],
+      "rowCount": 1
+    },
+    "KICKOFF": {
       "headers": [
         "CLIENT",
         "APPOINTMENT TIME - VANCOUVER",
