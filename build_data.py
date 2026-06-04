@@ -87,9 +87,11 @@ KEY = {
     "payment_status": "PAYMENT STATUS",
     "payment_cadence": "PAYMENT CADENCE",
     "currency": "CURRENCY",
-    "contract_value": "CONTRACT \nVALUE\n(Home Currency)",
-    "cash_collected": "CASH \nCOLLECTED\n(Home Currency",
-    "periodic_payments": "PERIODIC PAYMENTS\n(Home Currency)",
+    # Sheet sometimes ships these as multi-line headers, sometimes flat —
+    # the loader tries multiple shapes via g(). Keep canonical flat name here.
+    "contract_value": "CONTRACT VALUE (Home Currency)",
+    "cash_collected": "CASH COLLECTED (Home Currency",
+    "periodic_payments": "PERIODIC PAYMENTS (Home Currency)",
     "origin_date": "ORIGIN_DATE",
     "extra_weeks": "EXTRA_WEEKS",
     "length_type": "LENGTH_TYPE",
