@@ -1,6 +1,6 @@
 # BBA Client Data Dashboard — Build Progress
 
-**Progress Report · Updated 1 June 2026**
+**Progress Report · Updated 3 June 2026**
 
 A live, login-protected view of retention, churn, and renewals — sourced from the TRACKER spreadsheet, refreshed every minute, broken down by support coach. Built for Jase and the management team to baseline performance and identify the coaches driving the best outcomes.
 
@@ -116,7 +116,7 @@ The headline KPIs and the coach view are done — those were the priority five f
 
 | Date | What |
 |---|---|
-| 🔵 **Today · 1 June 2026** | Phase 2 + Phase 3 shipped. Baseline day starts. Demo build on track for later this week. |
+| 🔵 **Today · 3 June 2026** | Phase 2 + Phase 3 shipped and in production. Baseline snapshots running daily since 1 June. Demo build on track for tomorrow. |
 | **1 June 2026** *(baseline)* | First daily retention snapshot stored so Ryan has a "this is where we started" benchmark to grow from. |
 | **4–5 June 2026** *(demo)* | Working demo with churn, retention, renewal, off-boarding split, support coach leaderboard, and coach filter — the priority five for Jase. |
 
