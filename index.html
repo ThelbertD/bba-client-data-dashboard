@@ -8,6 +8,7 @@
 <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
 <link href="https://fonts.googleapis.com/css2?family=Archivo+Black&family=Inter:wght@400;500;600;700;800;900&display=swap" rel="stylesheet">
 <script src="https://cdn.jsdelivr.net/npm/chart.js@4.4.1/dist/chart.umd.min.js"></script>
+<script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
 <style>
   :root{
     --bg:#16181c;--panel:#1e2127;--panel2:#262a31;--white:#f4f5f7;--grey:#a4a9b3;
@@ -1554,22 +1555,136 @@ function showError(msg){
   b.classList.add('show');
 }
 
+/* === SUPABASE REALTIME CONFIG === */
+const SUPABASE_URL  = 'https://zkqtdjnffcnicslttno.supabase.co';
+const SUPABASE_ANON = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6InprcXRkam5mZmNuaWNzbHR0dG5vIiwicm9sZSI6ImFub24iLCJpYXQiOjE3ODAzMDk1MjEsImV4cCI6MjA5NTg4NTUyMX0.-EtefsRDHdBmGhCRPbEE5LtEojyTU6hgPPFI9vTM27Q';
+const sb = window.supabase.createClient(SUPABASE_URL, SUPABASE_ANON);
+
+function rowToClient(r){
+  const parseDate = s => {
+    if(!s) return null;
+    const d = new Date(s);
+    return isNaN(d) ? null : d;
+  };
+  const iso  = d => d ? d.toISOString().slice(0,10) : null;
+  const disp = s => s || null;
+  const od = parseDate(r.origin_date);
+  const sd = parseDate(r.status_date);
+  const ld = parseDate(r.last_event_date);
+  const ed = parseDate(r.current_program_end_date);
+  return {
+    id: r.email,
+    name: r.name_ptd || r.name_fb || '',
+    email: r.email,
+    country: r.country,
+    gender: r.gender,
+    program: (r.current_program || '').toUpperCase(),
+    headCoach: r.head_coach,
+    closer: r.closer || '',
+    supportCoach: r.support_coach || 'N/A',
+    status: r.current_status,
+    statusDate: disp(r.status_date),
+    statusDateISO: iso(sd),
+    lastEvent: r.last_event_type,
+    lastEventDate: disp(r.last_event_date),
+    lastEventDateISO: iso(ld),
+    extraWeeks: Number(r.extra_weeks) || 0,
+    lengthType: r.length_type,
+    paymentStatus: r.payment_status,
+    paymentCadence: r.payment_cadence,
+    daysToEnd: r.days_to_end == null ? null : Number(r.days_to_end),
+    endDate: disp(r.current_program_end_date),
+    endDateISO: iso(ed),
+    originDate: disp(r.origin_date),
+    originDateISO: iso(od),
+    contractValue: Number(r.contract_value_home_currency) || 0,
+    cashCollected: Number(r.cash_collected_home_currency) || 0,
+    price: Number(r.periodic_payments_home_currency) || 0,
+    stripeLink: r.stripe_link
+  };
+}
+
+/* === ALL 12 TABLES + the STATE.raw key each one maps to === */
+const TABLES = [
+  { name: 'raw',                       key: 'clients',          transform: rowToClient },
+  { name: 'client_notes',              key: 'clientNotes' },
+  { name: 'offboarded',                key: 'offboarded' },
+  { name: 'onboarding',                key: 'onboarding' },
+  { name: 'momentum',                  key: 'momentum' },
+  { name: 'celebration',               key: 'celebration' },
+  { name: 'challenge_upgrade',         key: 'challengeUpgrade' },
+  { name: 'catchup_call',              key: 'catchupCall' },
+  { name: 'kickoff',                   key: 'kickoff' },
+  { name: 'programs',                  key: 'programs' },
+  { name: 'retreat',                   key: 'retreat' },
+  { name: 'data_validation_dropdowns', key: 'dropdowns' }
+];
+
+async function fetchAllRows(tableName){
+  let all = [];
+  let from = 0;
+  const PAGE = 1000;
+  while(true){
+    const { data, error } = await sb.from(tableName).select('*').range(from, from + PAGE - 1);
+    if(error) throw error;
+    all = all.concat(data);
+    if(data.length < PAGE) break;
+    from += PAGE;
+  }
+  return all;
+}
+
+async function loadTable(tableDef){
+  const rows = await fetchAllRows(tableDef.name);
+  const mapped = tableDef.transform ? rows.map(tableDef.transform) : rows;
+  if(!STATE.raw) STATE.raw = { source: 'Supabase (realtime)', syncedAt: new Date().toISOString() };
+  STATE.raw[tableDef.key] = mapped;
+  STATE.raw.syncedAt = new Date().toISOString();
+  _lastData = STATE.raw;
+}
+
 async function loadData(){
-  const url = N8N_WEBHOOK_URL || LOCAL_DATA_FILE;
   try{
-    const res = await fetch(url, { cache:'no-store' });
-    if(!res.ok) throw new Error(`HTTP ${res.status} on ${url}`);
-    const raw = await res.json();
-    if(!raw.clients || !Array.isArray(raw.clients)){
-      throw new Error('data.json is missing the clients[] array — re-run build_data.py');
-    }
-    STATE.raw = raw;
+    STATE.raw = { source: 'Supabase (realtime)', syncedAt: new Date().toISOString() };
+    await Promise.all(TABLES.map(loadTable));
+    console.log('[BBA Dashboard] loaded', TABLES.map(t => `${t.key}:${STATE.raw[t.key]?.length || 0}`).join(', '));
     populateCoachSelect();
     render();
   } catch (err){
-    console.warn('[BBA Dashboard] data load failed:', err);
-    showError(`Could not load ${url} — open this page via a local web server (e.g. \`python -m http.server\`) so the dashboard can read data.json. Detail: ${err.message}`);
+    console.warn('[BBA Dashboard] Supabase load failed:', err);
+    showError(`Could not load Supabase data. Detail: ${err.message}`);
   }
+}
+
+/* === SUBSCRIBE TO REALTIME CHANGES on ALL 12 tables === */
+let _realtimeChannel = null;
+function startRealtime(){
+  if(_realtimeChannel) sb.removeChannel(_realtimeChannel);
+  const pending = {};
+  const debouncedReloadTable = (tableDef) => {
+    clearTimeout(pending[tableDef.name]);
+    pending[tableDef.name] = setTimeout(async () => {
+      try{
+        await loadTable(tableDef);
+        populateCoachSelect();
+        render();
+      } catch (err){
+        console.warn(`[BBA Dashboard] reload ${tableDef.name} failed:`, err);
+      }
+    }, 500);
+  };
+  let channel = sb.channel('all-tables-changes');
+  for(const tableDef of TABLES){
+    channel = channel.on('postgres_changes',
+      { event: '*', schema: 'public', table: tableDef.name },
+      (payload) => {
+        console.log(`[BBA Dashboard] realtime ${tableDef.name}:`, payload.eventType);
+        debouncedReloadTable(tableDef);
+      });
+  }
+  _realtimeChannel = channel.subscribe((status) => {
+    console.log('[BBA Dashboard] realtime status:', status);
+  });
 }
 
 /* =================================================================
@@ -2519,9 +2634,8 @@ function applyUrlParams(){
   if(drill)  setTimeout(() => openDrillDown(drill), 100);
 }
 
-/* Initial load + auto-refresh every 1 min + tick relative time every 30s */
-loadData().then(applyUrlParams);
-setInterval(loadData, 1 * 60 * 1000);
+/* Initial load + realtime subscription + tick relative time every 30s */
+loadData().then(() => { applyUrlParams(); startRealtime(); });
 setInterval(() => _lastData && renderSyncTime(_lastData.syncedAt), 30 * 1000);
 
 /* =================================================================
