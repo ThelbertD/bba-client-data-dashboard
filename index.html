@@ -734,7 +734,6 @@
         <label for="headCoachSelect">🎯 Head Coach</label>
         <select id="headCoachSelect"><option value="">All head coaches</option></select>
       </div>
-      <button class="reload-btn" id="reloadBtn">↻ Refresh</button>
     </div>
   </div>
 
@@ -1977,7 +1976,7 @@ $('#filterClear').addEventListener('click', () => applyFilter(presetRange('all')
 $('#coachSelect')?.addEventListener('change', (e) => setCoachFilter(e.target.value || null));
 $('#headCoachSelect')?.addEventListener('change', (e) => setHeadCoachFilter(e.target.value || null));
 
-$('#reloadBtn').addEventListener('click', loadData);
+$('#reloadBtn')?.addEventListener('click', loadData);
 
 /* =================================================================
    CALENDAR WIDGET
