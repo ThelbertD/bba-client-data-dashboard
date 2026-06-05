@@ -1651,6 +1651,103 @@ function rowToClient(r){
   };
 }
 
+/* === UNIFY CLIENTS ACROSS EVERY TAB ============================
+   Most tabs have client identity (name_ptd / name_fb / email) plus
+   some subset of the master fields. When RAW is empty but MOMENTUM,
+   OFFBOARDED, ONBOARDING etc. have rows, we still want the dashboard
+   to count those clients.
+
+   extractClient() pulls whatever's available from any row shape.
+   mergeClients() folds two records into one, favouring non-empty
+   values from the FIRST argument (use that for "trusted" sources
+   first). buildUnifiedClients() walks all tables in priority order
+   and deduplicates by NAME_PTD (uppercased).
+================================================================ */
+
+function _isoDate(s){
+  if(!s) return null;
+  const d = new Date(s);
+  return isNaN(d) ? null : d.toISOString().slice(0,10);
+}
+function _toNum(v){
+  if(v == null || v === '') return 0;
+  const n = Number(String(v).replace(/[,$\s]/g,''));
+  return isNaN(n) ? 0 : n;
+}
+
+function extractClient(row, sourceTable){
+  const rawName = (row.name_ptd || row.name_fb || row.client_name || row.name || row.client || '').toString().trim();
+  if(!rawName) return null;
+  const status = row.current_status || (sourceTable === 'offboarded' ? 'CANCELLED' : '');
+  return {
+    _sources: [sourceTable],
+    id: row.email || rawName.toUpperCase(),
+    name: rawName,
+    email: row.email || '',
+    country: row.country || '',
+    gender: row.gender || '',
+    program: (row.current_program || row.program || '').toUpperCase(),
+    headCoach: row.head_coach || '',
+    closer: row.closer || '',
+    supportCoach: row.support_coach || 'N/A',
+    status: status,
+    statusDate: row.status_date || null,
+    statusDateISO: _isoDate(row.status_date),
+    lastEvent: row.last_event_type || '',
+    lastEventDate: row.last_event_date || null,
+    lastEventDateISO: _isoDate(row.last_event_date),
+    extraWeeks: _toNum(row.extra_weeks),
+    lengthType: row.length_type || '',
+    paymentStatus: row.payment_status || '',
+    paymentCadence: row.payment_cadence || '',
+    daysToEnd: row.days_to_end == null ? null : Number(row.days_to_end),
+    endDate: row.current_program_end_date || null,
+    endDateISO: _isoDate(row.current_program_end_date),
+    originDate: row.origin_date || row.date_appointment_pst || null,
+    originDateISO: _isoDate(row.origin_date || row.date_appointment_pst),
+    contractValue: _toNum(row.contract_value_home_currency),
+    cashCollected: _toNum(row.cash_collected_home_currency),
+    price: _toNum(row.periodic_payments_home_currency),
+    stripeLink: row.stripe_link || ''
+  };
+}
+
+function mergeClients(a, b){
+  // Favour non-empty fields from `a` (the higher-priority source).
+  if(!a) return b;
+  if(!b) return a;
+  const out = { ...a, _sources: [...(a._sources || []), ...(b._sources || [])] };
+  for(const [k,v] of Object.entries(b)){
+    if(k === '_sources') continue;
+    const cur = out[k];
+    const empty = cur == null || cur === '' || cur === 0 || cur === 'N/A';
+    if(empty && v != null && v !== '' && v !== 0 && v !== 'N/A') out[k] = v;
+  }
+  return out;
+}
+
+// Tables that contain client identity, in priority order (richest first).
+// PROGRAMS + DATA VALIDATION DROPDOWNS skipped — they're config / catalog.
+const UNIFY_TABLES = ['raw','offboarded','onboarding','challenge_upgrade','momentum','celebration','catchup_call','kickoff','client_notes','retreat'];
+
+function buildUnifiedClients(){
+  const byKey = new Map();
+  for(const tableName of UNIFY_TABLES){
+    const def = TABLES.find(t => t.name === tableName);
+    if(!def) continue;
+    const list = STATE.raw?.[def.key] || [];
+    for(const row of list){
+      // RAW comes pre-transformed by rowToClient; everything else needs extraction
+      const c = (tableName === 'raw') ? row : extractClient(row, tableName);
+      if(!c || !c.name) continue;
+      const key = (c.email || c.name).toString().trim().toUpperCase();
+      if(!key) continue;
+      byKey.set(key, mergeClients(byKey.get(key), c));
+    }
+  }
+  return Array.from(byKey.values());
+}
+
 /* === ALL 12 TABLES + the STATE.raw key each one maps to === */
 const TABLES = [
   { name: 'raw',                       key: 'clients',          tab: 'RAW',                       transform: rowToClient },
@@ -1715,7 +1812,10 @@ async function loadData(){
   try{
     STATE.raw = { source: 'Supabase (realtime)', syncedAt: new Date().toISOString() };
     await Promise.all(TABLES.map(loadTable));
-    console.log('[BBA Dashboard] loaded', TABLES.map(t => `${t.key}:${STATE.raw[t.key]?.length || 0}`).join(', '));
+    // Unify clients across every tab → STATE.raw.clients becomes the union,
+    // not just whatever was in RAW. The dashboard's compute() reads this.
+    STATE.raw.clients = buildUnifiedClients();
+    console.log('[BBA Dashboard] loaded', TABLES.map(t => `${t.key}:${STATE.raw[t.key]?.length || 0}`).join(', '), `→ unified clients: ${STATE.raw.clients.length}`);
     populateCoachSelect();
     render();
   } catch (err){
@@ -1734,6 +1834,7 @@ function startRealtime(){
     pending[tableDef.name] = setTimeout(async () => {
       try{
         await loadTable(tableDef);
+        STATE.raw.clients = buildUnifiedClients();
         populateCoachSelect();
         render();
       } catch (err){
