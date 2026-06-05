@@ -1447,18 +1447,34 @@ function renderSupportCoachLeaderboard(){
 function populateCoachSelect(){
   const sel = $('#coachSelect');
   if(!sel) return;
-  const all = STATE.raw?.clients || [];
+  // Collect support_coach values from EVERY loaded tab, not just RAW/clients,
+  // so coaches added to MOMENTUM / OFFBOARDED / etc. still show up even
+  // before the master RAW table is populated.
   const counts = new Map();
-  for(const c of all){
+  // 1) The transformed client objects (RAW table → STATE.raw.clients)
+  const clients = STATE.raw?.clients || [];
+  for(const c of clients){
     const name = (c.supportCoach || '').trim().toUpperCase();
-    if(SUPPORT_COACH_EXCLUDE.has(name)) continue;
-    counts.set(name, (counts.get(name) || 0) + 1);
+    if(name && !SUPPORT_COACH_EXCLUDE.has(name)) counts.set(name, (counts.get(name) || 0) + 1);
+  }
+  // 2) Every other tab — scan headers for a support_coach column
+  const tabs = STATE.raw?.tabs || {};
+  for(const [tabName, tab] of Object.entries(tabs)){
+    if(tabName === 'RAW') continue; // already counted via STATE.raw.clients
+    if(!tab.headers || !tab.rows) continue;
+    const idx = tab.headers.findIndex(h => /support[_ ]?coach/i.test(h || ''));
+    if(idx < 0) continue;
+    for(const row of tab.rows){
+      const name = (row[idx] || '').trim().toUpperCase();
+      if(name && !SUPPORT_COACH_EXCLUDE.has(name)) counts.set(name, (counts.get(name) || 0) + 1);
+    }
   }
   const opts = Array.from(counts.entries())
     .sort((a,b) => a[0].localeCompare(b[0]))
     .map(([name, n]) => `<option value="${escapeHtml(name)}">${escapeHtml(titleCase(name))} (${n})</option>`);
+  const total = Array.from(counts.values()).reduce((s,v) => s+v, 0);
   const current = STATE.coachFilter || '';
-  sel.innerHTML = `<option value="">All coaches (${all.length.toLocaleString()})</option>${opts.join('')}`;
+  sel.innerHTML = `<option value="">All coaches (${total.toLocaleString()})</option>${opts.join('')}`;
   sel.value = current;
 }
 
