@@ -1701,10 +1701,13 @@ function extractClient(row, sourceTable){
     paymentStatus: row.payment_status || '',
     paymentCadence: row.payment_cadence || '',
     daysToEnd: row.days_to_end == null ? null : Number(row.days_to_end),
-    endDate: row.current_program_end_date || null,
-    endDateISO: _isoDate(row.current_program_end_date),
-    originDate: row.origin_date || row.date_appointment_pst || null,
-    originDateISO: _isoDate(row.origin_date || row.date_appointment_pst),
+    endDate:      row.current_program_end_date || row.program_end_date || row.end_date || null,
+    endDateISO:  _isoDate(row.current_program_end_date || row.program_end_date || row.end_date),
+    // Calendar entries pull originDate. For touchpoint tabs (MOMENTUM,
+    // CELEBRATION, CATCHUP_CALL, CHALLENGE_UPGRADE, KICKOFF) the
+    // appointment timestamp doubles as the calendar event date.
+    originDate:   row.origin_date || row.date_appointment_pst || row.appointment_time_local || row.appointment_time_vancouver || row.appointment_date || row.scheduled_date || null,
+    originDateISO: _isoDate(row.origin_date || row.date_appointment_pst || row.appointment_time_local || row.appointment_time_vancouver || row.appointment_date || row.scheduled_date),
     contractValue: _toNum(row.contract_value_home_currency),
     cashCollected: _toNum(row.cash_collected_home_currency),
     price: _toNum(row.periodic_payments_home_currency),
@@ -1763,6 +1766,7 @@ const TABLES = [
   { name: 'retreat',                   key: 'retreat',          tab: 'RETREAT' },
   { name: 'data_validation_dropdowns', key: 'dropdowns',        tab: 'DATA VALIDATION DROPDOWNS' }
 ];
+
 
 // Columns that are Supabase metadata, not part of the user-facing tab view
 const SUPABASE_META_COLS = new Set(['id', 'sheet_row', 'synced_at', 'created_at', 'updated_at']);
