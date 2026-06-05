@@ -1685,7 +1685,13 @@ async function fetchAllRows(tableName){
 }
 
 async function loadTable(tableDef){
-  const rows = await fetchAllRows(tableDef.name);
+  let rows = await fetchAllRows(tableDef.name);
+  // Sort by row_index ascending so the display always matches the source
+  // sheet's order. New rows inserted via realtime get higher row_index
+  // values and therefore land at the bottom, not the top.
+  if(rows.length && rows[0].row_index != null){
+    rows = rows.slice().sort((a,b) => (Number(a.row_index) || 0) - (Number(b.row_index) || 0));
+  }
   const mapped = tableDef.transform ? rows.map(tableDef.transform) : rows;
   if(!STATE.raw) STATE.raw = { source: 'Supabase (realtime)', syncedAt: new Date().toISOString(), tabs: {} };
   if(!STATE.raw.tabs) STATE.raw.tabs = {};
