@@ -1606,19 +1606,22 @@ function rowToClient(r){
 
 /* === ALL 12 TABLES + the STATE.raw key each one maps to === */
 const TABLES = [
-  { name: 'raw',                       key: 'clients',          transform: rowToClient },
-  { name: 'client_notes',              key: 'clientNotes' },
-  { name: 'offboarded',                key: 'offboarded' },
-  { name: 'onboarding',                key: 'onboarding' },
-  { name: 'momentum',                  key: 'momentum' },
-  { name: 'celebration',               key: 'celebration' },
-  { name: 'challenge_upgrade',         key: 'challengeUpgrade' },
-  { name: 'catchup_call',              key: 'catchupCall' },
-  { name: 'kickoff',                   key: 'kickoff' },
-  { name: 'programs',                  key: 'programs' },
-  { name: 'retreat',                   key: 'retreat' },
-  { name: 'data_validation_dropdowns', key: 'dropdowns' }
+  { name: 'raw',                       key: 'clients',          tab: 'RAW',                       transform: rowToClient },
+  { name: 'client_notes',              key: 'clientNotes',      tab: 'CLIENT_NOTES' },
+  { name: 'offboarded',                key: 'offboarded',       tab: 'OFFBOARDED' },
+  { name: 'onboarding',                key: 'onboarding',       tab: 'ONBOARDING' },
+  { name: 'momentum',                  key: 'momentum',         tab: 'MOMENTUM' },
+  { name: 'celebration',               key: 'celebration',      tab: 'CELEBRATION' },
+  { name: 'challenge_upgrade',         key: 'challengeUpgrade', tab: 'CHALLENGE UPGRADE' },
+  { name: 'catchup_call',              key: 'catchupCall',      tab: 'CATCHUP CALL' },
+  { name: 'kickoff',                   key: 'kickoff',          tab: 'KICKOFF' },
+  { name: 'programs',                  key: 'programs',         tab: 'PROGRAMS' },
+  { name: 'retreat',                   key: 'retreat',          tab: 'RETREAT' },
+  { name: 'data_validation_dropdowns', key: 'dropdowns',        tab: 'DATA VALIDATION DROPDOWNS' }
 ];
+
+// Columns that are Supabase metadata, not part of the user-facing tab view
+const SUPABASE_META_COLS = new Set(['id', 'sheet_row', 'synced_at', 'created_at', 'updated_at']);
 
 async function fetchAllRows(tableName){
   let all = [];
@@ -1637,8 +1640,20 @@ async function fetchAllRows(tableName){
 async function loadTable(tableDef){
   const rows = await fetchAllRows(tableDef.name);
   const mapped = tableDef.transform ? rows.map(tableDef.transform) : rows;
-  if(!STATE.raw) STATE.raw = { source: 'Supabase (realtime)', syncedAt: new Date().toISOString() };
+  if(!STATE.raw) STATE.raw = { source: 'Supabase (realtime)', syncedAt: new Date().toISOString(), tabs: {} };
+  if(!STATE.raw.tabs) STATE.raw.tabs = {};
   STATE.raw[tableDef.key] = mapped;
+
+  // Build the tabs[displayName] entry that the sidebar nav + tab viewer read from.
+  // Headers come from the first row, excluding Supabase metadata columns.
+  if(tableDef.tab){
+    const headers = rows.length
+      ? Object.keys(rows[0]).filter(c => !SUPABASE_META_COLS.has(c))
+      : [];
+    const tabRows = rows.map(r => headers.map(h => r[h] == null ? '' : String(r[h])));
+    STATE.raw.tabs[tableDef.tab] = { headers, rows: tabRows, rowCount: rows.length };
+  }
+
   STATE.raw.syncedAt = new Date().toISOString();
   _lastData = STATE.raw;
 }
