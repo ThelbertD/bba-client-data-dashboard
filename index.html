@@ -1447,20 +1447,43 @@ function renderSupportCoachLeaderboard(){
 function populateCoachSelect(){
   const sel = $('#coachSelect');
   if(!sel) return;
-  // Collect support_coach values from EVERY loaded tab, not just RAW/clients,
-  // so coaches added to MOMENTUM / OFFBOARDED / etc. still show up even
-  // before the master RAW table is populated.
+  // Three sources, merged into one canonical list:
+  //   1. DATA VALIDATION DROPDOWNS.SUPPORT_COACH — the master roster
+  //      (shows every coach in the dropdown even if they have 0 records)
+  //   2. STATE.raw.clients — transformed RAW table objects
+  //   3. Any other tab with a support_coach column (MOMENTUM, OFFBOARDED, etc.)
+  // For each name we track a count = "how many records reference this coach".
+  // Coaches from the master roster with no records still appear, just at 0.
   const counts = new Map();
-  // 1) The transformed client objects (RAW table → STATE.raw.clients)
+  const roster = new Set(); // coaches we should always show even with 0 records
+
+  const tabs = STATE.raw?.tabs || {};
+
+  // 1) Master roster from DATA VALIDATION DROPDOWNS
+  const dropdowns = tabs['DATA VALIDATION DROPDOWNS'];
+  if(dropdowns && dropdowns.headers && dropdowns.rows){
+    const idx = dropdowns.headers.findIndex(h => /support[_ ]?coach/i.test(h || ''));
+    if(idx >= 0){
+      for(const row of dropdowns.rows){
+        const name = (row[idx] || '').trim().toUpperCase();
+        if(name && !SUPPORT_COACH_EXCLUDE.has(name)){
+          roster.add(name);
+          if(!counts.has(name)) counts.set(name, 0);
+        }
+      }
+    }
+  }
+
+  // 2) Counts from STATE.raw.clients (the dashboard's RAW objects)
   const clients = STATE.raw?.clients || [];
   for(const c of clients){
     const name = (c.supportCoach || '').trim().toUpperCase();
     if(name && !SUPPORT_COACH_EXCLUDE.has(name)) counts.set(name, (counts.get(name) || 0) + 1);
   }
-  // 2) Every other tab — scan headers for a support_coach column
-  const tabs = STATE.raw?.tabs || {};
+
+  // 3) Counts from every other tab with a support_coach column
   for(const [tabName, tab] of Object.entries(tabs)){
-    if(tabName === 'RAW') continue; // already counted via STATE.raw.clients
+    if(tabName === 'RAW' || tabName === 'DATA VALIDATION DROPDOWNS') continue;
     if(!tab.headers || !tab.rows) continue;
     const idx = tab.headers.findIndex(h => /support[_ ]?coach/i.test(h || ''));
     if(idx < 0) continue;
@@ -1469,12 +1492,20 @@ function populateCoachSelect(){
       if(name && !SUPPORT_COACH_EXCLUDE.has(name)) counts.set(name, (counts.get(name) || 0) + 1);
     }
   }
-  const opts = Array.from(counts.entries())
-    .sort((a,b) => a[0].localeCompare(b[0]))
-    .map(([name, n]) => `<option value="${escapeHtml(name)}">${escapeHtml(titleCase(name))} (${n})</option>`);
-  const total = Array.from(counts.values()).reduce((s,v) => s+v, 0);
+
+  // Sort: roster coaches first (alpha), then any data-only coaches (alpha)
+  const sorted = Array.from(counts.entries()).sort((a,b) => {
+    const ar = roster.has(a[0]) ? 0 : 1;
+    const br = roster.has(b[0]) ? 0 : 1;
+    if(ar !== br) return ar - br;
+    return a[0].localeCompare(b[0]);
+  });
+  const opts = sorted.map(([name, n]) =>
+    `<option value="${escapeHtml(name)}">${escapeHtml(titleCase(name))} (${n})</option>`
+  );
+  const totalRecords = Array.from(counts.values()).reduce((s,v) => s+v, 0);
   const current = STATE.coachFilter || '';
-  sel.innerHTML = `<option value="">All coaches (${total.toLocaleString()})</option>${opts.join('')}`;
+  sel.innerHTML = `<option value="">All coaches (${totalRecords.toLocaleString()})</option>${opts.join('')}`;
   sel.value = current;
 }
 
