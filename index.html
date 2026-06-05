@@ -230,17 +230,17 @@
   .page-head h1{font-size:clamp(22px,4vw,30px)}
   .page-head .sub{color:var(--grey);font-size:13px;font-weight:500;margin-top:6px}
 
-  .controls{display:flex;align-items:center;gap:10px;flex-wrap:wrap}
-  .date-controls{display:flex;align-items:center;gap:8px;flex-wrap:wrap}
-  .date-input{display:inline-flex;align-items:center;gap:8px;background:var(--panel);
-    border:1px solid var(--line);border-radius:10px;padding:7px 12px;
-    font-size:12px;font-weight:700;color:var(--grey);text-transform:uppercase;letter-spacing:.06em;
+  .controls{display:flex;align-items:center;gap:8px;flex-wrap:wrap}
+  .date-controls{display:flex;align-items:center;gap:6px;flex-wrap:nowrap}
+  .date-input{display:inline-flex;align-items:center;gap:6px;background:var(--panel);
+    border:1px solid var(--line);border-radius:10px;padding:6px 10px;
+    font-size:11px;font-weight:700;color:var(--grey);text-transform:uppercase;letter-spacing:.06em;
     transition:border-color .15s}
   .date-input:focus-within{border-color:var(--accent)}
-  .date-input label{cursor:pointer}
+  .date-input label{cursor:pointer;display:none}             /* hide FROM/TO labels — date input is self-explanatory */
   .date-input input[type=date]{background:transparent;color:var(--white);border:0;
-    font-family:inherit;font-size:13px;font-weight:600;cursor:pointer;
-    color-scheme:dark;padding:0;letter-spacing:0;text-transform:none;min-width:115px}
+    font-family:inherit;font-size:12px;font-weight:600;cursor:pointer;
+    color-scheme:dark;padding:0;letter-spacing:0;text-transform:none;min-width:95px}
   .date-input input[type=date]::-webkit-calendar-picker-indicator{
     filter:invert(.8) brightness(1.2);cursor:pointer;opacity:.7}
   .date-input input[type=date]:hover::-webkit-calendar-picker-indicator{opacity:1}
@@ -249,20 +249,20 @@
   .presets{display:flex;gap:5px;flex-wrap:wrap;background:var(--panel);border:1px solid var(--line);
     border-radius:10px;padding:4px}
   .presets button{background:transparent;border:0;color:var(--grey);
-    padding:6px 10px;border-radius:7px;font-family:inherit;font-size:11px;font-weight:800;
-    text-transform:uppercase;letter-spacing:.06em;cursor:pointer;transition:all .15s}
+    padding:5px 8px;border-radius:7px;font-family:inherit;font-size:10px;font-weight:800;
+    text-transform:uppercase;letter-spacing:.05em;cursor:pointer;transition:all .15s}
   .presets button:hover{background:var(--bg);color:var(--accent-soft)}
   .presets button.active{background:var(--accent);color:#0c2230}
 
   /* Support coach selector */
-  .coach-pick{display:inline-flex;align-items:center;gap:8px;background:var(--panel);
-    border:1px solid var(--line);border-radius:100px;padding:6px 6px 6px 12px;font-size:12px;transition:all .15s}
-  .coach-pick label{color:var(--grey);font-weight:700;font-size:11px;letter-spacing:.04em;text-transform:uppercase;white-space:nowrap}
+  .coach-pick{display:inline-flex;align-items:center;gap:4px;background:var(--panel);
+    border:1px solid var(--line);border-radius:100px;padding:3px;font-size:11px;transition:all .15s}
+  .coach-pick label{color:var(--grey);font-weight:700;font-size:13px;padding:0 4px 0 6px;white-space:nowrap}
   .coach-pick select{background:var(--bg);color:var(--white);border:1px solid var(--line);
-    font-family:inherit;font-size:12px;font-weight:700;padding:6px 28px 6px 10px;border-radius:100px;
+    font-family:inherit;font-size:11px;font-weight:700;padding:5px 22px 5px 8px;border-radius:100px;
     cursor:pointer;outline:none;appearance:none;-webkit-appearance:none;-moz-appearance:none;
     background-image:url("data:image/svg+xml;utf8,<svg xmlns='http://www.w3.org/2000/svg' width='10' height='6' viewBox='0 0 10 6'><path fill='%23a4a9b3' d='M5 6L0 0h10z'/></svg>");
-    background-repeat:no-repeat;background-position:right 10px center;max-width:220px;text-overflow:ellipsis}
+    background-repeat:no-repeat;background-position:right 7px center;max-width:170px;text-overflow:ellipsis}
   .coach-pick select:hover{border-color:var(--accent);color:var(--accent-soft)}
   .coach-pick select:focus{border-color:var(--accent)}
   .coach-pick.active{box-shadow:0 0 0 2px var(--accent-dim);border-color:var(--accent)}
@@ -726,12 +726,12 @@
         <button data-preset="ytd">YTD</button>
         <button data-preset="all" class="active">All</button>
       </div>
-      <div class="coach-pick" id="coachPick">
-        <label for="coachSelect">👤 Support Coach</label>
+      <div class="coach-pick" id="coachPick" title="Support Coach filter">
+        <label for="coachSelect" aria-label="Support Coach">👤</label>
         <select id="coachSelect"><option value="">All coaches</option></select>
       </div>
-      <div class="coach-pick" id="headCoachPick">
-        <label for="headCoachSelect">🎯 Head Coach</label>
+      <div class="coach-pick" id="headCoachPick" title="Head Coach filter">
+        <label for="headCoachSelect" aria-label="Head Coach">🎯</label>
         <select id="headCoachSelect"><option value="">All head coaches</option></select>
       </div>
     </div>
