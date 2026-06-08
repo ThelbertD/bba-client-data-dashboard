@@ -22,3 +22,6 @@ Thumbs.db
 # Local secrets / env
 .env
 .env.local
+
+# Local preview server (dev only)
+.serve.ps1

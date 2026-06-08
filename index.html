@@ -649,9 +649,57 @@
     .kpi .value{font-size:22px}
     thead th,tbody td{padding:10px 12px}
   }
+
+  /* === Login gate === */
+  .login-overlay{position:fixed;inset:0;z-index:9999;display:flex;align-items:center;justify-content:center;
+    background:radial-gradient(1200px 600px at 50% -10%,rgba(56,182,255,.10),transparent),var(--bg);padding:24px}
+  .login-card{width:100%;max-width:380px;background:var(--panel);border:1px solid var(--line);border-radius:16px;
+    padding:32px 28px;box-shadow:0 24px 60px rgba(0,0,0,.45);display:flex;flex-direction:column;gap:14px}
+  .login-brand{display:flex;justify-content:center;margin-bottom:4px}
+  .login-brand img{height:34px;width:auto}
+  .login-title{font-family:'Archivo Black';font-size:20px;text-align:center;color:var(--white);letter-spacing:.01em}
+  .login-sub{text-align:center;color:var(--grey);font-size:13px;margin-top:-6px}
+  .login-field{display:flex;flex-direction:column;gap:6px}
+  .login-field span{font-size:12px;font-weight:700;color:var(--grey);text-transform:uppercase;letter-spacing:.06em}
+  .login-field input{background:var(--bg);color:var(--white);border:1px solid var(--line);border-radius:9px;
+    padding:11px 13px;font-size:14px;font-family:inherit;outline:none;transition:border-color .15s,box-shadow .15s}
+  .login-field input:focus{border-color:var(--accent);box-shadow:0 0 0 3px var(--accent-dim)}
+  .login-error{color:var(--bad);font-size:13px;min-height:0;display:none}
+  .login-error.show{display:block}
+  .login-btn{margin-top:6px;background:var(--accent);color:#06121c;border:none;border-radius:9px;padding:12px;
+    font-size:14px;font-weight:800;cursor:pointer;transition:filter .15s,opacity .15s}
+  .login-btn:hover{filter:brightness(1.08)}
+  .login-btn:disabled{opacity:.6;cursor:wait}
+
+  /* Header sign-out */
+  .user-email{color:var(--grey)}
+  .signout-btn{background:var(--panel2);color:var(--grey);border:1px solid var(--line);border-radius:7px;
+    padding:5px 11px;font-size:12px;font-weight:700;cursor:pointer;font-family:inherit;transition:all .15s}
+  .signout-btn:hover{border-color:var(--bad);color:var(--bad)}
 </style>
 </head>
 <body>
+
+<!-- === LOGIN GATE (Supabase Auth) === -->
+<div id="loginOverlay" class="login-overlay">
+  <form id="loginForm" class="login-card" autocomplete="on">
+    <div class="login-brand">
+      <img src="Images/(BBA) Logo-Horizantal White.png" alt="Better Body Academy">
+    </div>
+    <h2 class="login-title">Client Data Dashboard</h2>
+    <p class="login-sub">Sign in to continue</p>
+    <label class="login-field">
+      <span>Email</span>
+      <input type="email" id="loginEmail" required autocomplete="username" placeholder="you@example.com">
+    </label>
+    <label class="login-field">
+      <span>Password</span>
+      <input type="password" id="loginPassword" required autocomplete="current-password" placeholder="••••••••">
+    </label>
+    <div id="loginError" class="login-error" role="alert"></div>
+    <button type="submit" id="loginBtn" class="login-btn">Sign in</button>
+  </form>
+</div>
 
 <button class="sb-toggle" id="sbToggle" aria-label="Toggle menu">
   <svg viewBox="0 0 24 24"><path d="M3 6h18v2H3zm0 5h18v2H3zm0 5h18v2H3z"/></svg>
@@ -691,6 +739,9 @@
     <span>Last sync: <span id="lastSync">—</span></span>
     <span>·</span>
     <span>Source: <strong id="sourceLabel" style="color:var(--white)">—</strong></span>
+    <span class="sep" id="userSep" style="display:none">·</span>
+    <span id="userEmail" class="user-email" style="display:none"></span>
+    <button id="signOutBtn" class="signout-btn" style="display:none" title="Sign out">Sign out</button>
   </div>
 </header>
 
@@ -1511,7 +1562,7 @@ function populateCoachSelect(){
   );
   const totalRecords = Array.from(counts.values()).reduce((s,v) => s+v, 0);
   const current = STATE.coachFilter || '';
-  sel.innerHTML = `<option value="">All coaches (${totalRecords.toLocaleString()})</option>${opts.join('')}`;
+  sel.innerHTML = `<option value="">Support Coach (${totalRecords.toLocaleString()})</option>${opts.join('')}`;
   sel.value = current;
 }
 
@@ -2884,9 +2935,84 @@ function applyUrlParams(){
   if(drill)  setTimeout(() => openDrillDown(drill), 100);
 }
 
-/* Initial load + realtime subscription + tick relative time every 30s */
-loadData().then(() => { applyUrlParams(); startRealtime(); });
-setInterval(() => _lastData && renderSyncTime(_lastData.syncedAt), 30 * 1000);
+/* =================================================================
+   AUTH GATE — Supabase Auth
+   -----------------------------------------------------------------
+   The dashboard boots ONLY after a valid Supabase session exists.
+   The login overlay covers the page until then, so no data is
+   fetched and no content is shown to signed-out visitors.
+   ================================================================= */
+let _booted = false;
+function bootApp(){
+  if(_booted) return;            // never boot the data layer twice
+  _booted = true;
+  document.getElementById('loginOverlay').style.display = 'none';
+  /* Initial load + realtime subscription + tick relative time every 30s */
+  loadData().then(() => { applyUrlParams(); startRealtime(); });
+  setInterval(() => _lastData && renderSyncTime(_lastData.syncedAt), 30 * 1000);
+}
+
+function showSignedIn(user){
+  const email = user?.email || '';
+  const el = document.getElementById('userEmail');
+  const sep = document.getElementById('userSep');
+  const btn = document.getElementById('signOutBtn');
+  if(el){ el.textContent = email; el.style.display = ''; }
+  if(sep) sep.style.display = '';
+  if(btn) btn.style.display = '';
+}
+
+function showLogin(){
+  document.getElementById('loginOverlay').style.display = 'flex';
+}
+
+(function initAuth(){
+  const form    = document.getElementById('loginForm');
+  const errBox  = document.getElementById('loginError');
+  const btn     = document.getElementById('loginBtn');
+
+  function setError(msg){
+    if(!errBox) return;
+    errBox.textContent = msg || '';
+    errBox.classList.toggle('show', !!msg);
+  }
+
+  // Login form submit → Supabase email/password sign-in
+  form?.addEventListener('submit', async (e) => {
+    e.preventDefault();
+    setError('');
+    const email = document.getElementById('loginEmail').value.trim();
+    const password = document.getElementById('loginPassword').value;
+    if(!email || !password){ setError('Enter your email and password.'); return; }
+    btn.disabled = true; btn.textContent = 'Signing in…';
+    try{
+      const { error } = await sb.auth.signInWithPassword({ email, password });
+      if(error){ setError(error.message || 'Sign-in failed.'); return; }
+      // onAuthStateChange handles the rest (boot + UI)
+    } catch(err){
+      setError(err.message || 'Sign-in failed.');
+    } finally {
+      btn.disabled = false; btn.textContent = 'Sign in';
+    }
+  });
+
+  // Sign out
+  document.getElementById('signOutBtn')?.addEventListener('click', async () => {
+    await sb.auth.signOut();
+    location.reload();
+  });
+
+  // React to auth state: boot when signed in, gate when signed out
+  sb.auth.onAuthStateChange((_event, session) => {
+    if(session?.user){ showSignedIn(session.user); bootApp(); }
+  });
+
+  // Initial check — existing session keeps the user logged in across reloads
+  sb.auth.getSession().then(({ data: { session } }) => {
+    if(session?.user){ showSignedIn(session.user); bootApp(); }
+    else { showLogin(); }
+  }).catch(() => showLogin());
+})();
 
 /* =================================================================
    CHAT WIDGET — BBA Data Assistant
