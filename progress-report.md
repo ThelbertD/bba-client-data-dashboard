@@ -6,7 +6,7 @@ A live, login-protected view of retention, churn, and renewals — sourced from 
 
 | | |
 |---|---|
-| **Phases complete** | 4 of 6 |
+| **Phases complete** | 5 of 6 |
 | **Demo target** | 4–5 June 2026 |
 | **Retention baseline** | 1 June 2026 |
 | **Build estimate** | < 1 day remaining |
@@ -18,17 +18,17 @@ A live, login-protected view of retention, churn, and renewals — sourced from 
 
 ## Where we are right now
 
-28 features in the spec. The metrics layer Jase named as critical — churn, retention, renewal, off-boarding split, plus the per-coach view — shipped earlier. Since then we've landed the **n8n live pipeline**, the **client-journey funnel with first-month survival**, the **burned-out vs completed-then-left off-boarding tag**, and **Supabase login with authenticated-only data access**. Remaining work is wiring the AI assistant to Claude and capturing the daily retention baseline.
+28 features in the spec. The metrics layer Jase named as critical — churn, retention, renewal, off-boarding split, plus the per-coach view — shipped earlier. Since then we've landed the **n8n live pipeline**, the **client-journey funnel with first-month survival**, the **burned-out vs completed-then-left off-boarding tag**, and the full **data + access layer**: all 12 tables provisioned in Supabase with schema and **row-level security**, fronted by a **Supabase login** so only authenticated users can read the data. Remaining work is wiring the AI assistant to Claude and capturing the daily retention baseline.
 
-**Overall delivery: 90%** *(counting partials as half-credit)*
+**Overall delivery: 92%** *(counting partials as half-credit)*
 
 ```
-██████████████████████████████████████████████████████░░░░░░  90%
+███████████████████████████████████████████████████████░░░░░  92%
 ```
 
 | Status | Count | Notes |
 |---|---|---|
-| ✅ **Delivered** | **25** | Built & visible in the dashboard |
+| ✅ **Delivered** | **26** | Built & visible in the dashboard |
 | 🟡 **In progress** | **1** | Wired, awaiting final connection |
 | 🔵 **Lined up** | **1** | Next on the build queue |
 | 🔴 **Awaiting input** | **2** | Need access keys or accounts |
@@ -37,10 +37,10 @@ A live, login-protected view of retention, churn, and renewals — sourced from 
 
 ## The six phases
 
-Each phase is a self-contained milestone. The first two are largely complete; Phases 2 and 3 shipped this week.
+Each phase is a self-contained milestone. Phases 0–4 are shipped; Phase 5 (login) is live with the AI assistant wiring still to come.
 
-### ✅ Phase 0 — Data readiness — **90%**
-Source spreadsheet audited end-to-end — all required columns confirmed present and emitted in the data feed. One remaining sub-task: an auto-stamp trigger on the status-date column (~10-line script).
+### ✅ Phase 0 — Data readiness — **100%** 🎉
+**Shipped.** Source spreadsheet audited end-to-end and the full data layer is provisioned in Supabase — all 12 tables created with their schema, indexes, and row-level security, with the live data feed writing into them. The dashboard reads every required column straight from this layer.
 
 ### ✅ Phase 1 — Live data pipeline — **100%** 🎉
 **Shipped.** The n8n workflow is built and connected — it reads the Sheet on a 1-minute schedule and writes the dashboard payload to the data source. The dashboard polls every 60 seconds, so the "Last sync" timestamp now advances on its own with no manual refresh.
@@ -76,9 +76,11 @@ The features named in the kickoff call as critical for the Phase 2 + Phase 3 dem
 
 ---
 
-## Foundation already in place — 14 features that have been live
+## Foundation already in place — 15 features that are live
 
-The dashboard chassis built earlier in the project — every one of these is what the new headline KPIs sit on top of.
+The dashboard chassis — every one of these is what the new headline KPIs sit on top of.
+
+- **✓ Secure data layer** — All 12 tables provisioned in Supabase with schema, indexes, and row-level security; a Supabase login gates the dashboard and the public key alone returns zero rows.
 
 - **✓ 18 KPI tiles** — Active book, programs, payments, retention — all in a 3×6 snapshot grid.
 - **✓ Date range filter** — Quick chips for Today / 7D / 30D / MTD / QTD / YTD plus custom dates.
@@ -113,7 +115,7 @@ The headline KPIs, the coach view, the journey funnel, the live pipeline, and lo
 
 | Date | What |
 |---|---|
-| 🔵 **Today · 8 June 2026** | Phases 1–4 shipped and in production; Supabase login + RLS live. Baseline snapshots running daily since 1 June. Build is in its final stretch — AI assistant + per-coach scoping to go. |
+| 🔵 **Today · 8 June 2026** | Phases 0–4 shipped and in production; Supabase data layer, login + RLS all live. Baseline snapshots running daily since 1 June. Build is in its final stretch — AI assistant + per-coach scoping to go. |
 | **1 June 2026** *(baseline)* | First daily retention snapshot stored so Ryan has a "this is where we started" benchmark to grow from. |
 | **4–5 June 2026** *(demo)* | Working demo with churn, retention, renewal, off-boarding split, support coach leaderboard, and coach filter — the priority five for Jase. |
 
