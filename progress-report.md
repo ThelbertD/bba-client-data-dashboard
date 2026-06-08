@@ -1,37 +1,37 @@
 # BBA Client Data Dashboard — Build Progress
 
-**Progress Report · Updated 3 June 2026**
+**Progress Report · Updated 8 June 2026**
 
 A live, login-protected view of retention, churn, and renewals — sourced from the TRACKER spreadsheet, refreshed every minute, broken down by support coach. Built for Jase and the management team to baseline performance and identify the coaches driving the best outcomes.
 
 | | |
 |---|---|
-| **Phases complete** | 3 of 6 |
+| **Phases complete** | 4 of 6 |
 | **Demo target** | 4–5 June 2026 |
 | **Retention baseline** | 1 June 2026 |
-| **Build estimate** | ~1–2 days remaining |
+| **Build estimate** | < 1 day remaining |
 
-🔗 Live dashboard: http://localhost:8765/
+🔗 Live dashboard: http://localhost:8080/
 🔗 Source repo: https://github.com/ThelbertD/bba-client-data-dashboard *(private)*
 
 ---
 
 ## Where we are right now
 
-28 features in the spec. The metrics layer Jase named as critical for the demo — churn, retention, renewal, off-boarding split, plus the per-coach view — all shipped this week. Remaining work is the funnel, the churn-reason tag, and the login + n8n live pipeline.
+28 features in the spec. The metrics layer Jase named as critical — churn, retention, renewal, off-boarding split, plus the per-coach view — shipped earlier. Since then we've landed the **n8n live pipeline**, the **client-journey funnel with first-month survival**, the **burned-out vs completed-then-left off-boarding tag**, and **Supabase login with authenticated-only data access**. Remaining work is wiring the AI assistant to Claude and capturing the daily retention baseline.
 
-**Overall delivery: 81%** *(counting partials as half-credit)*
+**Overall delivery: 90%** *(counting partials as half-credit)*
 
 ```
-████████████████████████████████████████████████░░░░░░░░░░░░  81%
+██████████████████████████████████████████████████████░░░░░░  90%
 ```
 
 | Status | Count | Notes |
 |---|---|---|
-| ✅ **Delivered** | **21** | Built & visible in the dashboard |
-| 🟡 **In progress** | **2** | Wired, awaiting final connection |
-| 🔵 **Lined up** | **3** | Next on the build queue |
-| 🔴 **Awaiting input** | **3** | Need access keys or accounts |
+| ✅ **Delivered** | **25** | Built & visible in the dashboard |
+| 🟡 **In progress** | **1** | Wired, awaiting final connection |
+| 🔵 **Lined up** | **1** | Next on the build queue |
+| 🔴 **Awaiting input** | **2** | Need access keys or accounts |
 
 ---
 
@@ -42,8 +42,8 @@ Each phase is a self-contained milestone. The first two are largely complete; Ph
 ### ✅ Phase 0 — Data readiness — **90%**
 Source spreadsheet audited end-to-end — all required columns confirmed present and emitted in the data feed. One remaining sub-task: an auto-stamp trigger on the status-date column (~10-line script).
 
-### 🟡 Phase 1 — Live data pipeline — **60%**
-Dashboard side is ready — it polls its data source every minute and is hot-swap-ready for n8n. Remaining: build the n8n workflow that reads the Sheet on a 1-min schedule and writes the dashboard payload.
+### ✅ Phase 1 — Live data pipeline — **100%** 🎉
+**Shipped.** The n8n workflow is built and connected — it reads the Sheet on a 1-minute schedule and writes the dashboard payload to the data source. The dashboard polls every 60 seconds, so the "Last sync" timestamp now advances on its own with no manual refresh.
 
 ### ✅ Phase 2 — Priority metrics: churn, retention, renewal — **100%** 🎉
 **Shipped.** Four headline KPI cards live across the top row: churn rate, retention rate, renewal rate, and the off-boarding split (paying vs challenge). Each card is click-through and recomputes live with the date filter.
@@ -51,11 +51,11 @@ Dashboard side is ready — it polls its data source every minute and is hot-swa
 ### ✅ Phase 3 — The coach story — **100%** 🎉
 **Shipped.** Support coach performance table ranks every coach by retention. A coach selector in the top controls filters the entire dashboard — KPIs, charts, calendar, tables — down to one coach's book in a single click.
 
-### 🔵 Phase 4 — Funnel & churn reason — **Up next**
-Onboarding → Active → Cancelled funnel with first-month survival, plus a "burned out early" vs "completed then left" tag on each off-boarded client. Up next once Phase 0 status-date trigger is in.
+### ✅ Phase 4 — Funnel & churn reason — **100%** 🎉
+**Shipped.** Onboarding → Active → Cancelled journey funnel with a first-month survival figure (share of clients who signed up ≥30 days ago and did *not* churn in month one). Every off-boarded client is auto-tagged "🔥 burned out early" (dropped mid-term or inside 30 days) vs "🏁 completed then left" (saw the program through, then left) — surfaced as a clickable split and as an Exit-reason tag on each client row. Each funnel stage and reason drills through to its client list.
 
-### 🔴 Phase 5 — Login & AI assistant — **25%**
-Supabase login so managers see all and coaches see only their own book. The dashboard chat widget answers from live data and now matches the KPI cards exactly — Phase 5 wires it to Claude so it can explain the numbers in plain English beyond keyword matching.
+### 🟡 Phase 5 — Login & AI assistant — **60%**
+**Login shipped.** Supabase email/password login gates the whole dashboard, and Row Level Security locks all 12 data tables to authenticated users only — the public key alone now returns zero rows, so the login actually protects the data rather than just hiding the UI. Remaining: per-coach default scoping (coaches land on their own book) and wiring the chat widget to Claude so it explains the numbers in plain English beyond keyword matching.
 
 ### 🔴 Phase 6 — Retention baseline & finish — **Final**
 A daily retention snapshot starting 1 June so Ryan has a "this is where we started" benchmark, plus week-in-program and price shown on every renewal-ready client row.
@@ -99,16 +99,13 @@ The dashboard chassis built earlier in the project — every one of these is wha
 
 ## What's left before "demo ready"
 
-The headline KPIs and the coach view are done — those were the priority five from the kickoff call. Remaining items finish the funnel, the live pipeline, and the access layer.
+The headline KPIs, the coach view, the journey funnel, the live pipeline, and login are all done. Three items remain before the build is fully closed out.
 
 | # | Feature | Description | ETA |
 |---|---|---|---|
-| 01 | **Client journey funnel** | Onboarding → Active → Cancelled, with the first-month survival percentage between stages one and two. The number Jase repeatedly asked about in the kickoff call. | This week |
-| 02 | **Burned-out vs left tag** | Each off-boarded client gets classified — dropped early or completed-then-left — so the off-boarding card can split by reason, not just by program type. | This week (after Phase 0 trigger) |
-| 03 | **n8n live pipeline** | The dashboard already polls every 60 seconds — once n8n writes the dashboard payload on the same cadence, the "Last sync" timestamp moves on its own and no manual data refresh is ever needed. | Needs n8n instance |
-| 04 | **Login (Supabase Auth)** | Managers see the whole business. Each coach lands on their own filtered view by default. Clients have no access. ~10 users to provision once Supabase is set up. | Needs Supabase project |
-| 05 | **AI assistant wired to Claude** | The chat panel already answers from the local snapshot. Phase 5 wires it to Claude so it can explain the numbers in plain English and answer follow-ups. | Needs Anthropic key |
-| 06 | **1 June retention baseline** | A daily snapshot of retention rate stored from 1 June onwards so Ryan has a "this is where we started" benchmark to grow against. | Daily after Phase 1 |
+| 01 | **Per-coach default view** | Login is live and managers see the whole business; the remaining piece is scoping each coach to land on their own book by default. ~10 users to provision. | This week |
+| 02 | **AI assistant wired to Claude** | The chat panel already answers from the live snapshot and matches the KPI cards. Phase 5 wires it to Claude so it can explain the numbers in plain English and answer follow-ups. | Needs Anthropic key |
+| 03 | **1 June retention baseline** | A daily snapshot of retention rate stored from 1 June onwards so Ryan has a "this is where we started" benchmark to grow against. | Daily, ongoing |
 
 ---
 
@@ -116,7 +113,7 @@ The headline KPIs and the coach view are done — those were the priority five f
 
 | Date | What |
 |---|---|
-| 🔵 **Today · 3 June 2026** | Phase 2 + Phase 3 shipped and in production. Baseline snapshots running daily since 1 June. Demo build on track for tomorrow. |
+| 🔵 **Today · 8 June 2026** | Phases 1–4 shipped and in production; Supabase login + RLS live. Baseline snapshots running daily since 1 June. Build is in its final stretch — AI assistant + per-coach scoping to go. |
 | **1 June 2026** *(baseline)* | First daily retention snapshot stored so Ryan has a "this is where we started" benchmark to grow from. |
 | **4–5 June 2026** *(demo)* | Working demo with churn, retention, renewal, off-boarding split, support coach leaderboard, and coach filter — the priority five for Jase. |
 
@@ -126,17 +123,17 @@ The headline KPIs and the coach view are done — those were the priority five f
 
 The nine checks from the spec. The demo is ready when every box is ticked.
 
-- [ ] Live "Last sync" timestamp that updates *— needs n8n live pipeline*
+- [x] Live "Last sync" timestamp that updates *— n8n live pipeline shipped*
 - [x] Top row shows churn, retention, renewal, and off-boarded with the challenge-versus-paying split
 - [x] Support coach leaderboard ranks coaches by retention
 - [x] The whole dashboard can be filtered to one support coach
-- [ ] The funnel shows first-month survival percentage
-- [ ] Off-boarded clients are tagged "burned out" or "completed then left"
-- [ ] Login required — managers see everything, coaches see their own book
+- [x] The funnel shows first-month survival percentage
+- [x] Off-boarded clients are tagged "burned out" or "completed then left"
+- [x] Login required — managers see everything *(per-coach default scoping still to come)*
 - [x] AI assistant returns the same churn number as the KPI card
 - [ ] Retention baseline captured starting 1 June for Ryan
 
-> **4 of 9 done · 5 to go before the demo ships**
+> **8 of 9 done · 1 to go before the demo ships**
 
 ---
 

@@ -170,16 +170,16 @@
 
   <!-- COVER -->
   <section class="section cover">
-    <div class="cover-tag">Progress Report · Updated 3 June 2026</div>
+    <div class="cover-tag">Progress Report · Updated 8 June 2026</div>
     <img src="Images/(BBA) Logo-Horizantal White.png" alt="BBA" class="cover-logo">
     <h1>Client Data Dashboard<br><span class="accent">Build Progress</span></h1>
     <p class="lede">A live, login-protected view of retention, churn, and renewals — sourced from the TRACKER spreadsheet, refreshed every minute, broken down by support coach. Built for Jase and the management team to baseline performance and identify the coaches driving the best outcomes.</p>
 
     <div class="meta-row">
-      <div class="meta">Phases complete<strong>3 of 6</strong></div>
+      <div class="meta">Phases complete<strong>4 of 6</strong></div>
       <div class="meta">Demo target<strong>4–5 June 2026</strong></div>
       <div class="meta">Retention baseline<strong>1 June 2026</strong></div>
-      <div class="meta">Build estimate<strong>~1–2 days remaining</strong></div>
+      <div class="meta">Build estimate<strong>&lt; 1 day remaining</strong></div>
     </div>
 
     <div class="cta-row">
@@ -192,35 +192,35 @@
   <section class="section">
     <div class="section-tag">Scorecard</div>
     <h2>Where we are right now</h2>
-    <p class="lead">28 features in the spec. The metrics layer Jase named as critical for the demo — churn, retention, renewal, off-boarding split, plus the per-coach view — all shipped this week. Remaining work is the funnel, the churn-reason tag, and the login + n8n live pipeline.</p>
+    <p class="lead">28 features in the spec. The metrics layer Jase named as critical — churn, retention, renewal, off-boarding split, plus the per-coach view — shipped earlier. Since then we've landed the n8n live pipeline, the client-journey funnel with first-month survival, the burned-out vs completed-then-left off-boarding tag, and Supabase login with authenticated-only data access. Remaining work is wiring the AI assistant to Claude and capturing the daily retention baseline.</p>
 
     <div class="progress-bar-wrap">
-      <div class="progress-bar"><div class="fill" style="width:81%"></div></div>
+      <div class="progress-bar"><div class="fill" style="width:90%"></div></div>
       <div class="progress-meta">
         <span class="label">Overall delivery — counting partials as half-credit</span>
-        <span class="pct">81%</span>
+        <span class="pct">90%</span>
       </div>
     </div>
 
     <div class="stats">
       <div class="stat done">
         <div class="label">Delivered</div>
-        <div class="value">21</div>
+        <div class="value">25</div>
         <div class="sub">Built &amp; visible in the dashboard</div>
       </div>
       <div class="stat partial">
         <div class="label">In progress</div>
-        <div class="value">2</div>
+        <div class="value">1</div>
         <div class="sub">Wired, awaiting final connection</div>
       </div>
       <div class="stat pending">
         <div class="label">Lined up</div>
-        <div class="value">3</div>
+        <div class="value">1</div>
         <div class="sub">Next on the build queue</div>
       </div>
       <div class="stat blocked">
         <div class="label">Awaiting input</div>
-        <div class="value">3</div>
+        <div class="value">2</div>
         <div class="sub">Need access keys or accounts</div>
       </div>
     </div>
@@ -230,7 +230,7 @@
   <section class="section">
     <div class="section-tag">Build plan</div>
     <h2>The six phases</h2>
-    <p class="lead">Each phase is a self-contained milestone. The first two are largely complete — Phase 2 is where this week's focus sits.</p>
+    <p class="lead">Each phase is a self-contained milestone. Phases 1–4 are shipped; Phase 5 (login) is live with the AI assistant wiring still to come.</p>
 
     <div class="phases">
       <div class="phase complete">
@@ -245,15 +245,15 @@
         </div>
       </div>
 
-      <div class="phase active">
+      <div class="phase complete">
         <div class="phase-num">1</div>
         <div class="phase-body">
           <div class="title">Live data pipeline</div>
-          <div class="desc">Dashboard side is ready — it polls its data source every minute and is hot-swap-ready for n8n. Remaining: build the n8n workflow that reads the Sheet on a 1-min schedule and writes the dashboard payload.</div>
+          <div class="desc">✓ Shipped. The n8n workflow is built and connected — it reads the Sheet on a 1-minute schedule and writes the dashboard payload. The dashboard polls every 60 seconds, so the "Last sync" timestamp now advances on its own with no manual refresh.</div>
         </div>
         <div class="phase-status">
-          <div class="phase-progress"><div class="bar" style="width:60%"></div></div>
-          <div class="phase-pct">60%</div>
+          <div class="phase-progress"><div class="bar" style="width:100%"></div></div>
+          <div class="phase-pct">100%</div>
         </div>
       </div>
 
@@ -281,27 +281,27 @@
         </div>
       </div>
 
-      <div class="phase active">
+      <div class="phase complete">
         <div class="phase-num">4</div>
         <div class="phase-body">
           <div class="title">Funnel &amp; churn reason</div>
-          <div class="desc">Onboarding → Active → Cancelled funnel with first-month survival, plus a "burned out early" vs "completed then left" tag on each off-boarded client. Up next once Phase 0 status-date trigger is in.</div>
+          <div class="desc">✓ Shipped. Onboarding → Active → Cancelled journey funnel with a first-month survival figure. Every off-boarded client is auto-tagged "🔥 burned out early" vs "🏁 completed then left", surfaced as a clickable split and an Exit-reason tag on each client row. Each funnel stage and reason drills through to its client list.</div>
         </div>
         <div class="phase-status">
-          <div class="phase-progress"><div class="bar" style="width:0%"></div></div>
-          <div class="phase-pct">Up next</div>
+          <div class="phase-progress"><div class="bar" style="width:100%"></div></div>
+          <div class="phase-pct">100%</div>
         </div>
       </div>
 
-      <div class="phase pending">
+      <div class="phase active">
         <div class="phase-num">5</div>
         <div class="phase-body">
           <div class="title">Login &amp; AI assistant</div>
-          <div class="desc">Supabase login so managers see all and coaches see only their own book. The dashboard chat widget answers from live data and now matches the KPI cards exactly — Phase 5 wires it to Claude so it can explain the numbers in plain English beyond keyword matching.</div>
+          <div class="desc">✓ Login shipped. Supabase email/password login gates the dashboard and Row Level Security locks all 12 data tables to authenticated users only — the public key alone now returns zero rows. Remaining: per-coach default scoping and wiring the chat widget to Claude for plain-English answers.</div>
         </div>
         <div class="phase-status">
-          <div class="phase-progress"><div class="bar" style="width:25%"></div></div>
-          <div class="phase-pct">25%</div>
+          <div class="phase-progress"><div class="bar" style="width:60%"></div></div>
+          <div class="phase-pct">60%</div>
         </div>
       </div>
 
@@ -364,56 +364,32 @@
   <section class="section" id="whats-next">
     <div class="section-tag">Still to build</div>
     <h2>What's left before "demo ready"</h2>
-    <p class="lead">The headline KPIs and the coach view are done — those were the priority five from the kickoff call. Remaining items finish the funnel, the live pipeline, and the access layer.</p>
+    <p class="lead">The headline KPIs, the coach view, the journey funnel, the live pipeline, and login are all done. Three items remain before the build is fully closed out.</p>
 
     <div class="next-list">
       <div class="next">
         <div class="next-icon">01</div>
         <div class="next-body">
-          <div class="title">Client journey funnel</div>
-          <div class="desc">Onboarding → Active → Cancelled, with the first-month survival percentage between stages one and two. The number Jase repeatedly asked about in the kickoff call.</div>
+          <div class="title">Per-coach default view</div>
+          <div class="desc">Login is live and managers see the whole business; the remaining piece is scoping each coach to land on their own book by default. ~10 users to provision.</div>
         </div>
         <div class="next-eta">This week</div>
       </div>
       <div class="next">
         <div class="next-icon">02</div>
         <div class="next-body">
-          <div class="title">Burned-out vs left tag</div>
-          <div class="desc">Each off-boarded client gets classified — dropped early or completed-then-left — so the off-boarding card can split by reason, not just by program type.</div>
-        </div>
-        <div class="next-eta">This week (after Phase 0 trigger)</div>
-      </div>
-      <div class="next">
-        <div class="next-icon">03</div>
-        <div class="next-body">
-          <div class="title">n8n live pipeline</div>
-          <div class="desc">The dashboard already polls every 60 seconds — once n8n writes the dashboard payload on the same cadence, the "Last sync" timestamp moves on its own and no manual data refresh is ever needed.</div>
-        </div>
-        <div class="next-eta">Needs n8n instance</div>
-      </div>
-      <div class="next">
-        <div class="next-icon">04</div>
-        <div class="next-body">
-          <div class="title">Login (Supabase Auth)</div>
-          <div class="desc">Managers see the whole business. Each coach lands on their own filtered view by default. Clients have no access. ~10 users to provision once Supabase is set up.</div>
-        </div>
-        <div class="next-eta">Needs Supabase project</div>
-      </div>
-      <div class="next">
-        <div class="next-icon">05</div>
-        <div class="next-body">
           <div class="title">AI assistant wired to Claude</div>
-          <div class="desc">The chat panel already answers from the local snapshot. Phase 5 wires it to Claude so it can explain the numbers in plain English and answer follow-ups.</div>
+          <div class="desc">The chat panel already answers from the live snapshot and matches the KPI cards. Phase 5 wires it to Claude so it can explain the numbers in plain English and answer follow-ups.</div>
         </div>
         <div class="next-eta">Needs Anthropic key</div>
       </div>
       <div class="next">
-        <div class="next-icon">06</div>
+        <div class="next-icon">03</div>
         <div class="next-body">
           <div class="title">1 June retention baseline</div>
           <div class="desc">A daily snapshot of retention rate stored from 1 June onwards so Ryan has a "this is where we started" benchmark to grow against.</div>
         </div>
-        <div class="next-eta">Daily after Phase 1</div>
+        <div class="next-eta">Daily, ongoing</div>
       </div>
     </div>
   </section>
@@ -427,8 +403,8 @@
     <div class="timeline">
       <div class="tl-card current">
         <div class="label">Today</div>
-        <div class="date">3 June 2026</div>
-        <div class="desc">Phase 2 + Phase 3 shipped. Headline KPIs, support coach leaderboard, and whole-dashboard coach filter all live. Demo build on track for tomorrow.</div>
+        <div class="date">8 June 2026</div>
+        <div class="desc">Phases 1–4 shipped; Supabase login + RLS live. Headline KPIs, coach leaderboard, journey funnel, and live pipeline all in production. Final stretch — AI assistant + per-coach scoping to go.</div>
       </div>
       <div class="tl-card">
         <div class="label">Baseline started</div>
@@ -450,18 +426,18 @@
     <p class="lead">The nine checks from the spec. The demo is ready when every box is ticked.</p>
 
     <div class="accept">
-      <div class="accept-item pending"><div class="check"></div><div class="text">Live "Last sync" timestamp that updates <span style="color:var(--grey-dim);font-size:11px;margin-left:6px">— needs n8n live pipeline</span></div></div>
+      <div class="accept-item done"><div class="check"></div><div class="text">Live "Last sync" timestamp that updates <span style="color:var(--grey-dim);font-size:11px;margin-left:6px">— n8n live pipeline shipped</span></div></div>
       <div class="accept-item done"><div class="check"></div><div class="text">Top row shows churn, retention, renewal, and off-boarded with the challenge-versus-paying split</div></div>
       <div class="accept-item done"><div class="check"></div><div class="text">Support coach leaderboard ranks coaches by retention</div></div>
       <div class="accept-item done"><div class="check"></div><div class="text">The whole dashboard can be filtered to one support coach</div></div>
-      <div class="accept-item pending"><div class="check"></div><div class="text">The funnel shows first-month survival percentage</div></div>
-      <div class="accept-item pending"><div class="check"></div><div class="text">Off-boarded clients are tagged "burned out" or "completed then left"</div></div>
-      <div class="accept-item pending"><div class="check"></div><div class="text">Login required — managers see everything, coaches see their own book</div></div>
+      <div class="accept-item done"><div class="check"></div><div class="text">The funnel shows first-month survival percentage</div></div>
+      <div class="accept-item done"><div class="check"></div><div class="text">Off-boarded clients are tagged "burned out" or "completed then left"</div></div>
+      <div class="accept-item done"><div class="check"></div><div class="text">Login required — managers see everything <span style="color:var(--grey-dim);font-size:11px;margin-left:6px">— per-coach default scoping still to come</span></div></div>
       <div class="accept-item done"><div class="check"></div><div class="text">AI assistant returns the same churn number as the KPI card</div></div>
       <div class="accept-item pending"><div class="check"></div><div class="text">Retention baseline captured starting 1 June for Ryan</div></div>
     </div>
     <div style="margin-top:18px;padding:14px 18px;background:var(--accent-dim);border:1px solid var(--accent);border-radius:10px;font-size:13px;color:var(--accent-soft);font-weight:600">
-      4 of 9 done · 5 to go before the demo ships
+      8 of 9 done · 1 to go before the demo ships
     </div>
   </section>
 
