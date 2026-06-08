@@ -676,6 +676,54 @@
   .signout-btn{background:var(--panel2);color:var(--grey);border:1px solid var(--line);border-radius:7px;
     padding:5px 11px;font-size:12px;font-weight:700;cursor:pointer;font-family:inherit;transition:all .15s}
   .signout-btn:hover{border-color:var(--bad);color:var(--bad)}
+
+  /* === Phase 4: client journey funnel === */
+  .funnel-card{background:var(--panel);border:1px solid var(--line);border-radius:14px;padding:22px 24px;
+    display:flex;flex-direction:column;gap:22px}
+  .funnel-stages{display:flex;flex-direction:column;gap:14px}
+  .fstage{display:grid;grid-template-columns:190px 1fr;align-items:center;gap:18px;cursor:pointer;
+    background:none;border:none;padding:0;width:100%;text-align:left;font-family:inherit}
+  .fstage .fmeta{display:flex;flex-direction:column;gap:3px;min-width:0}
+  .fstage .fl{font-size:14px;font-weight:800;color:var(--white);line-height:1.25}
+  .fstage .fconv{font-size:12px;color:var(--grey);line-height:1.3}
+  .fstage .ftrack{background:var(--bg);border:1px solid var(--line);border-radius:10px;width:100%}
+  .fstage .fbar{height:46px;border-radius:9px;display:flex;align-items:center;padding:0 16px;
+    color:#06121c;font-weight:900;font-size:18px;min-width:64px;transition:filter .15s;box-sizing:border-box}
+  .fstage:hover .fbar{filter:brightness(1.08)}
+  .fstage .s-onboard{background:linear-gradient(90deg,var(--accent),var(--accent-soft))}
+  .fstage .s-active{background:linear-gradient(90deg,var(--good),#86efac)}
+  .fstage .s-cancel{background:linear-gradient(90deg,var(--bad),#fca5a5)}
+  @media(max-width:760px){ .fstage{grid-template-columns:1fr;gap:7px} }
+  .funnel-meta{display:grid;grid-template-columns:1fr 1fr;gap:16px}
+  .fm-card{background:var(--panel2);border:1px solid var(--line);border-radius:12px;padding:18px}
+  .fm-survival-inner{display:flex;align-items:center;gap:14px}
+  .fm-ico{font-size:30px;line-height:1}
+  .fm-val{font-size:28px;font-weight:900;color:var(--white);line-height:1.1}
+  .fm-lbl{font-size:12px;font-weight:800;text-transform:uppercase;letter-spacing:.06em;color:var(--accent-soft)}
+  .fm-sub{font-size:12px;color:var(--grey);margin-top:3px}
+  .fe-head{font-size:13px;font-weight:800;color:var(--grey);text-transform:uppercase;letter-spacing:.06em;
+    display:flex;align-items:center;gap:8px;margin-bottom:14px}
+  .fe-segs{display:flex;gap:10px;margin-bottom:12px}
+  .fe-seg{flex:1;background:var(--bg);border:1px solid var(--line);border-radius:10px;padding:12px;
+    cursor:pointer;font-family:inherit;transition:border-color .15s,transform .1s;text-align:left}
+  .fe-seg:hover{transform:translateY(-1px)}
+  .fe-seg.burned:hover{border-color:var(--bad)}
+  .fe-seg.completed:hover{border-color:var(--good)}
+  .fe-v{font-size:24px;font-weight:900;color:var(--white)}
+  .fe-l{font-size:12px;font-weight:700;color:var(--grey);margin-top:2px}
+  .fe-bar{display:flex;height:8px;border-radius:5px;overflow:hidden;background:var(--bg)}
+  .fe-bar .b-burned{background:var(--bad)}
+  .fe-bar .b-completed{background:var(--good)}
+  .fe-bar .b-unknown{background:var(--grey-dim)}
+  .fe-note{font-size:11px;color:var(--grey-dim);margin-top:7px}
+
+  /* Exit-reason tag (in drill-down client lists) */
+  .tag-exit{display:inline-block;padding:3px 9px;border-radius:6px;font-size:11px;font-weight:700;white-space:nowrap}
+  .tag-burned{background:var(--bad-dim);color:#fca5a5}
+  .tag-completed{background:var(--good-dim);color:#86efac}
+  .tag-unknown{background:var(--panel2);color:var(--grey-dim)}
+
+  @media(max-width:720px){ .funnel-meta{grid-template-columns:1fr} }
 </style>
 </head>
 <body>
@@ -819,6 +867,15 @@
     <div class="chart-card">
       <h3>Payment Cadence Mix</h3>
       <div class="chart-wrap"><canvas id="chartCadence"></canvas></div>
+    </div>
+  </div>
+
+  <div class="section-title">Client journey funnel <span class="pill">Onboarding → Active → Cancelled</span></div>
+  <div class="funnel-card">
+    <div class="funnel-stages" id="funnelStages"></div>
+    <div class="funnel-meta">
+      <div class="fm-card" id="funnelSurvival"></div>
+      <div class="fm-card" id="funnelExit"></div>
     </div>
   </div>
 
@@ -1215,6 +1272,44 @@ function compute(clients){
   const offChallenge = cancelledArr.filter(isChallenge).length;
   const offPaying    = cancelledArr.length - offChallenge;
 
+  // === PHASE 4 — Client-journey funnel + off-boarding (exit) reason tag ===
+  // Snapshot lifecycle funnel. We only have each client's CURRENT status
+  // (not full history), so the stages are defined on where they stand now:
+  //   Onboarding = everyone who signed up (all clients enter onboarding)
+  //   Active     = currently in active coaching/life (ACTIVE_STATUSES)
+  //   Cancelled  = churned (CANCELLED)
+  const _dayDiff = (aISO, bISO) => (!aISO || !bISO) ? null
+        : Math.round((new Date(bISO) - new Date(aISO)) / 86400000);
+  const todayISO = new Date().toISOString().slice(0, 10);
+
+  // Exit-reason classification — tags every cancelled (off-boarded) client:
+  //   burned    = churned inside the first 30 days, OR left before their
+  //               committed program reached its end date (dropped mid-term)
+  //   completed = saw the program through to / past its end date, then left
+  const classifyExit = (c) => {
+    if(c.status !== 'CANCELLED') return null;
+    const inProgram = _dayDiff(c.originDateISO, c.statusDateISO);
+    if(inProgram != null && inProgram <= 30) return 'burned';        // early drop
+    if(c.statusDateISO && c.endDateISO){
+      return new Date(c.statusDateISO) < new Date(c.endDateISO) ? 'burned' : 'completed';
+    }
+    if(c.daysToEnd != null) return c.daysToEnd > 0 ? 'burned' : 'completed';
+    return 'unknown';
+  };
+  for(const c of clients){ c.offboardReason = classifyExit(c); }
+  const exitBurned    = cancelledArr.filter(c => c.offboardReason === 'burned').length;
+  const exitCompleted = cancelledArr.filter(c => c.offboardReason === 'completed').length;
+  const exitUnknown   = cancelledArr.length - exitBurned - exitCompleted;
+
+  // First-month survival: of clients who signed up >= 30 days ago, what
+  // share were NOT cancelled within their first 30 days in the program.
+  const survivalCohort = clients.filter(c => c.originDateISO && (_dayDiff(c.originDateISO, todayISO) ?? 0) >= 30);
+  const survivalEarlyChurn = survivalCohort.filter(c =>
+        c.status === 'CANCELLED' && (_dayDiff(c.originDateISO, c.statusDateISO) ?? 999) <= 30).length;
+  const firstMonthSurvival = survivalCohort.length
+        ? Math.round((1 - survivalEarlyChurn / survivalCohort.length) * 1000) / 10
+        : null;
+
   const kpis = [
     { key:'total_clients',  label:'Total Clients',    value: total,                                  format:'int' },
     { key:'active',         label:'Active',           value: activeArr.length,                       format:'int',  highlight:'hero' },
@@ -1267,6 +1362,15 @@ function compute(clients){
       byHeadCoach: topN(byCoach, 6),
       byCountry: topN(byCountry, 6),
       byCadence: topN(byCadence, 6),
+    },
+    funnel: {
+      onboarding: total,
+      active: activeArr.length,
+      cancelled: cancelledArr.length,
+      firstMonthSurvival,
+      survivalCohort: survivalCohort.length,
+      survivalEarlyChurn,
+      exitBurned, exitCompleted, exitUnknown,
     },
     closers, recent, endingSoon,
   };
@@ -1437,6 +1541,79 @@ function renderCharts(data){
   renderBarChart('chartCoach',   data.charts.byHeadCoach);
   renderBarChart('chartCountry', data.charts.byCountry, { horizontal:true });
   renderBarChart('chartCadence', data.charts.byCadence, { multicolor:true });
+}
+
+/* === PHASE 4: Client journey funnel + off-boarding reason === */
+function renderFunnel(metrics){
+  const f = metrics.funnel;
+  const stagesEl = $('#funnelStages');
+  if(!f || !stagesEl) return;
+
+  const max = Math.max(f.onboarding, 1);
+  const barPct = n => Math.max(8, Math.round(n / max * 100));   // floor so small stages stay visible
+  const ofSignup = n => f.onboarding ? (n / f.onboarding * 100).toFixed(1) + '%' : '—';
+  const stages = [
+    { label:'Onboarding', count:f.onboarding, cls:'s-onboard', drill:'total_clients', sub:'Signed up · every client enters here' },
+    { label:'Active',     count:f.active,     cls:'s-active',  drill:'active',         sub:`${ofSignup(f.active)} of signed-up · still active` },
+    { label:'Cancelled',  count:f.cancelled,  cls:'s-cancel',  drill:'cancelled',      sub:`${ofSignup(f.cancelled)} of signed-up · churned` },
+  ];
+  stagesEl.innerHTML = stages.map(s => `
+    <button class="fstage" data-drill="${s.drill}" type="button" title="Click to view these clients">
+      <div class="fmeta"><div class="fl">${s.label}</div><div class="fconv">${s.sub}</div></div>
+      <div class="ftrack"><div class="fbar ${s.cls}" style="width:${barPct(s.count)}%">${fmtInt(s.count)}</div></div>
+    </button>`).join('');
+  stagesEl.querySelectorAll('[data-drill]').forEach(el =>
+    el.addEventListener('click', () => openDrillDown(el.dataset.drill)));
+
+  // First-month survival
+  const surv = $('#funnelSurvival');
+  if(surv){
+    const v = f.firstMonthSurvival;
+    surv.innerHTML = `
+      <div class="fm-survival-inner">
+        <div class="fm-ico">🛡️</div>
+        <div>
+          <div class="fm-val">${v == null ? '—' : v.toFixed(1) + '%'}</div>
+          <div class="fm-lbl">First-month survival</div>
+          <div class="fm-sub">${fmtInt(f.survivalEarlyChurn)} of ${fmtInt(f.survivalCohort)} clients who signed up ≥30 days ago churned within month 1</div>
+        </div>
+      </div>`;
+  }
+
+  // Off-boarding reason split (burned out early vs completed then left)
+  const exit = $('#funnelExit');
+  if(exit){
+    const tot = f.exitBurned + f.exitCompleted + f.exitUnknown;
+    const w = n => tot ? Math.round(n / tot * 100) : 0;
+    exit.innerHTML = `
+      <div class="fe-head">Off-boarding reason <span class="pill">${fmtInt(tot)} cancelled</span></div>
+      <div class="fe-segs">
+        <button class="fe-seg burned" data-exit="burned" type="button" title="View these clients">
+          <div class="fe-v">${fmtInt(f.exitBurned)}</div><div class="fe-l">🔥 Burned out early</div>
+        </button>
+        <button class="fe-seg completed" data-exit="completed" type="button" title="View these clients">
+          <div class="fe-v">${fmtInt(f.exitCompleted)}</div><div class="fe-l">🏁 Completed then left</div>
+        </button>
+      </div>
+      <div class="fe-bar">
+        <div class="b-burned" style="width:${w(f.exitBurned)}%"></div>
+        <div class="b-completed" style="width:${w(f.exitCompleted)}%"></div>
+        ${f.exitUnknown ? `<div class="b-unknown" style="width:${w(f.exitUnknown)}%"></div>` : ''}
+      </div>
+      ${f.exitUnknown ? `<div class="fe-note">${fmtInt(f.exitUnknown)} unclassified (missing cancel/end dates)</div>` : ''}`;
+    exit.querySelectorAll('[data-exit]').forEach(b =>
+      b.addEventListener('click', () => openExitDrill(b.dataset.exit)));
+  }
+}
+
+function openExitDrill(reason){
+  KPI_FILTERS.__exit__ = {
+    label: reason === 'burned' ? 'Off-boarded · burned out early' : 'Off-boarded · completed then left',
+    icon:  reason === 'burned' ? '🔥' : '🏁',
+    filter: c => c.status === 'CANCELLED' && c.offboardReason === reason,
+    sort: (a,b) => (b.statusDateISO || '').localeCompare(a.statusDateISO || ''),
+  };
+  openDrillDown('__exit__');
 }
 
 /* Support coach leaderboard — always built from the UNFILTERED client list
@@ -1713,6 +1890,7 @@ function render(){
   renderHeadline(metrics);
   renderKpis(metrics);
   renderCharts(metrics);
+  renderFunnel(metrics);
   renderCalendar();
   renderSupportCoachLeaderboard();
   renderClosers(metrics);
@@ -2187,6 +2365,9 @@ const DRILL_COLUMNS = [
   { key:'program',        label:'Program',    sortable:true,  render: c => `<span class="program-tag program-${escapeHtml(c.program||'')}">${escapeHtml(c.program||'—')}</span>` },
   { key:'headCoach',      label:'Head Coach', sortable:true,  render: c => escapeHtml(c.headCoach) },
   { key:'status',         label:'Status',     sortable:true,  render: c => `<span class="badge ${statusBadge(c.status)}">${escapeHtml((c.status||'').replace('ACTIVE_',''))}</span>` },
+  { key:'offboardReason', label:'Exit reason', sortable:true, render: c => c.status === 'CANCELLED'
+      ? `<span class="tag-exit tag-${c.offboardReason || 'unknown'}">${c.offboardReason === 'burned' ? '🔥 Burned early' : c.offboardReason === 'completed' ? '🏁 Completed' : '· Unknown'}</span>`
+      : '<span style="color:var(--grey-dim)">—</span>' },
   { key:'paymentStatus',  label:'Payment',    sortable:true,  render: c => escapeHtml(c.paymentStatus||'—') },
   { key:'contractValue',  label:'Contract',   sortable:true,  align:'num', render: c => c.contractValue ? `<strong>${fmtMoney(c.contractValue)}</strong>` : '—' },
   { key:'daysToEnd',      label:'Days left',  sortable:true,  align:'num', render: c => c.daysToEnd != null ? `<span class="badge-days ${daysBadge(c.daysToEnd)}">${c.daysToEnd}d</span>` : '—' },
