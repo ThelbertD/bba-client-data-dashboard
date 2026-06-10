@@ -879,29 +879,6 @@
   <div class="section-title">Month-to-date snapshot <span class="pill">18 metrics</span></div>
   <div class="kpi-grid" id="kpiGrid"></div>
 
-  <div class="section-title">Distribution</div>
-  <div class="charts">
-    <div class="chart-card">
-      <h3>Clients by Program</h3>
-      <div class="chart-wrap"><canvas id="chartProgram"></canvas></div>
-    </div>
-    <div class="chart-card">
-      <h3>Clients by Head Coach</h3>
-      <div class="chart-wrap"><canvas id="chartCoach"></canvas></div>
-    </div>
-  </div>
-
-  <div class="charts">
-    <div class="chart-card">
-      <h3>Clients by Country</h3>
-      <div class="chart-wrap"><canvas id="chartCountry"></canvas></div>
-    </div>
-    <div class="chart-card">
-      <h3>Payment Cadence Mix</h3>
-      <div class="chart-wrap"><canvas id="chartCadence"></canvas></div>
-    </div>
-  </div>
-
   <div class="section-title">Client journey funnel <span class="pill">Onboarding → Active → Cancelled</span></div>
   <div class="funnel-card">
     <div class="funnel-stages" id="funnelStages"></div>
@@ -1568,13 +1545,6 @@ function renderBarChart(canvasId, items, opts = {}){
   });
 }
 
-function renderCharts(data){
-  renderBarChart('chartProgram', data.charts.byProgram, { multicolor:true });
-  renderBarChart('chartCoach',   data.charts.byHeadCoach);
-  renderBarChart('chartCountry', data.charts.byCountry, { horizontal:true });
-  renderBarChart('chartCadence', data.charts.byCadence, { multicolor:true });
-}
-
 /* =================================================================
    AS-OF-NOW CURRENT SNAPSHOT — front-page scoreboard
    -----------------------------------------------------------------
@@ -2013,7 +1983,6 @@ function render(){
   renderSnapshotCharts();
   renderHeadline(metrics);
   renderKpis(metrics);
-  renderCharts(metrics);
   renderFunnel(metrics);
   renderCalendar();
   renderSupportCoachLeaderboard();
