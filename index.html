@@ -717,6 +717,20 @@
   .fe-bar .b-unknown{background:var(--grey-dim)}
   .fe-note{font-size:11px;color:var(--grey-dim);margin-top:7px}
 
+  /* === Current snapshot (as of now) tiles === */
+  .snapshot-grid{display:grid;grid-template-columns:repeat(4,1fr);gap:12px}
+  .snap-tile{background:var(--panel);border:1px solid var(--line);border-top:3px solid var(--accent);
+    border-radius:14px;padding:18px;text-align:left;cursor:pointer;font-family:inherit;
+    display:flex;flex-direction:column;gap:4px;transition:border-color .15s,transform .1s}
+  .snap-tile:hover{border-color:var(--accent);transform:translateY(-2px)}
+  .snap-tile .value{font-family:'Archivo Black';font-size:30px;color:var(--white);line-height:1}
+  .snap-tile .label{font-size:12px;font-weight:800;letter-spacing:.04em;color:var(--white);text-transform:uppercase}
+  .snap-tile .hint{font-size:11px;color:var(--grey-dim);line-height:1.3}
+  .snap-tile.snap-hero{background:linear-gradient(160deg,var(--accent-dim),var(--panel))}
+  .snap-tile.snap-hero .value{color:var(--accent-soft)}
+  @media(max-width:900px){ .snapshot-grid{grid-template-columns:repeat(2,1fr)} }
+  @media(max-width:560px){ .snapshot-grid{grid-template-columns:1fr} }
+
   /* Exit-reason tag (in drill-down client lists) */
   .tag-exit{display:inline-block;padding:3px 9px;border-radius:6px;font-size:11px;font-weight:700;white-space:nowrap}
   .tag-burned{background:var(--bad-dim);color:#fca5a5}
@@ -840,6 +854,9 @@
     <span>📅 Filtered to clients with sign-up date <strong id="filterSummaryRange"></strong> — <strong id="filterSummaryCount"></strong> matching</span>
     <button class="clear" id="filterClear">Clear filter</button>
   </div>
+
+  <div class="section-title">As of now — current snapshot <span class="pill">Live · active book · not date-filtered</span></div>
+  <div class="snapshot-grid" id="snapshotGrid"></div>
 
   <div class="section-title">Headline KPIs <span class="pill">The 4 Jase watches</span></div>
   <div class="headline-row" id="headlineRow"></div>
@@ -1543,6 +1560,79 @@ function renderCharts(data){
   renderBarChart('chartCadence', data.charts.byCadence, { multicolor:true });
 }
 
+/* =================================================================
+   AS-OF-NOW CURRENT SNAPSHOT — front-page scoreboard
+   -----------------------------------------------------------------
+   Per spec, filters are exact and applied to the FULL current book
+   (STATE.raw.clients), independent of the date-range filter.
+     Active  = CURRENT_STATUS in ACTIVE_ONBOARDING + ACTIVE_COACHING
+                                + ACTIVE_PAUSED + ACTIVE_LIFE
+     Paying  = CURRENT_STATUS in ACTIVE_ONBOARDING + ACTIVE_COACHING
+   ================================================================= */
+const SNAPSHOT_ACTIVE = new Set(['ACTIVE_ONBOARDING','ACTIVE_COACHING','ACTIVE_PAUSED','ACTIVE_LIFE']);
+const SNAPSHOT_PAYING = new Set(['ACTIVE_ONBOARDING','ACTIVE_COACHING']);
+
+function snapshotTiles(){
+  const isActive = c => SNAPSHOT_ACTIVE.has(c.status);
+  const prog = p => (c => isActive(c) && c.program === p);
+  const gender = g => (c => isActive(c) && (c.gender || '').toUpperCase() === g);
+  return [
+    { key:'active',    label:'Active Clients', hero:true, hint:'ONBOARDING + COACHING + PAUSED + LIFE', match: c => SNAPSHOT_ACTIVE.has(c.status) },
+    { key:'paying',    label:'Paying Clients', hero:true, hint:'ONBOARDING + COACHING',                 match: c => SNAPSHOT_PAYING.has(c.status) },
+    { key:'challenge', label:'Challenge',      hint:'Active · CHALLENGE', match: prog('CHALLENGE') },
+    { key:'basecamp',  label:'Basecamp',       hint:'Active · BASECAMP',  match: prog('BASECAMP') },
+    { key:'ignition',  label:'Ignition',       hint:'Active · IGNITION',  match: prog('IGNITION') },
+    { key:'elite',     label:'Elite',          hint:'Active · ELITE',     match: prog('ELITE') },
+    { key:'male',      label:'Male',           hint:'Active · MALE',      match: gender('MALE') },
+    { key:'female',    label:'Female',         hint:'Active · FEMALE',    match: gender('FEMALE') },
+  ];
+}
+
+function renderSnapshot(){
+  const grid = $('#snapshotGrid');
+  if(!grid) return;
+  const all = STATE.raw?.clients || [];
+  const tiles = snapshotTiles();
+  grid.innerHTML = tiles.map((t, i) => {
+    const n = all.filter(t.match).length;
+    return `<button class="snap-tile${t.hero ? ' snap-hero' : ''}" data-snap="${i}" type="button"
+        title="${escapeHtml(t.hint)} — click to view these clients">
+      <div class="value">${fmtInt(n)}</div>
+      <div class="label">${escapeHtml(t.label)}</div>
+      <div class="hint">${escapeHtml(t.hint)}</div>
+    </button>`;
+  }).join('');
+  grid.querySelectorAll('[data-snap]').forEach(btn => {
+    btn.addEventListener('click', () => {
+      const t = tiles[parseInt(btn.dataset.snap, 10)];
+      const matched = all.filter(t.match).slice().sort((a,b) => (a.name||'').localeCompare(b.name||''));
+      openSnapshotDrill(t.label, matched);
+    });
+  });
+}
+
+/* Drill that uses the snapshot's own (unfiltered) matched set, so the list
+   always matches the tile count regardless of the page's date filter. */
+function openSnapshotDrill(label, matched){
+  drillState = { key:'__snapshot__', label, all: matched, visible: matched, sortKey:null, sortDir:1 };
+  $('#drillIcon').textContent = '◴';
+  $('#drillLabel').textContent = 'Current snapshot · as of now';
+  $('#drillTitle').textContent = label;
+  const cv = matched.reduce((s,c) => s + (c.contractValue || 0), 0);
+  const activeCount = matched.filter(c => SNAPSHOT_ACTIVE.has(c.status)).length;
+  $('#drillMini').innerHTML = `
+    <div class="mini"><div class="l">Matched</div><div class="v">${fmtInt(matched.length)}</div></div>
+    <div class="mini"><div class="l">Contract Value</div><div class="v">${fmtMoney(cv)}</div></div>
+    <div class="mini"><div class="l">Currently Active</div><div class="v">${fmtInt(activeCount)}</div></div>`;
+  $('#drillSearch').value = '';
+  renderDrillTable(matched);
+  drillEl.classList.add('open');
+  drillBackdrop.classList.add('open');
+  drillEl.setAttribute('aria-hidden','false');
+  $$('#kpiGrid .kpi').forEach(t => t.classList.remove('active-tile'));
+  setTimeout(() => $('#drillSearch').focus(), 50);
+}
+
 /* === PHASE 4: Client journey funnel + off-boarding reason === */
 function renderFunnel(metrics){
   const f = metrics.funnel;
@@ -1887,6 +1977,7 @@ function render(){
     $('#filterSummaryCount').textContent = `${clients.length.toLocaleString()} clients`;
   }
 
+  renderSnapshot();
   renderHeadline(metrics);
   renderKpis(metrics);
   renderCharts(metrics);
