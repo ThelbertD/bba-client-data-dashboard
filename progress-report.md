@@ -35,6 +35,39 @@ A live, login-protected view of retention, churn, and renewals — sourced from 
 
 ---
 
+## ★ Latest review — "As of now" current snapshot (front page)
+
+New review of the **main front page**: the team wants an **"AS OF NOW — CURRENT" snapshot** — a live, point-in-time view of the active book (not lifetime totals). Below are the requested scoreboard tiles and charts with their exact filter logic against the source sheet.
+
+> **Active definition** used throughout: `CURRENT_STATUS` (Col S) ∈ **ACTIVE_ONBOARDING + ACTIVE_COACHING + ACTIVE_PAUSED + ACTIVE_LIFE**
+
+### Scoreboard tiles
+
+| # | Tile | Filter logic |
+|---|---|---|
+| 1 | **Active clients** | `CURRENT_STATUS` ∈ ACTIVE_ONBOARDING + ACTIVE_COACHING + ACTIVE_PAUSED + ACTIVE_LIFE |
+| 2 | **Paying clients** | `CURRENT_STATUS` ∈ ACTIVE_ONBOARDING + ACTIVE_COACHING |
+| 3 | **Active — Challenge** | Active **AND** `CURRENT_PROGRAM` (Col J) = CHALLENGE |
+| 4 | **Active — Basecamp** | Active **AND** `CURRENT_PROGRAM` = BASECAMP |
+| 5 | **Active — Ignition** | Active **AND** `CURRENT_PROGRAM` = IGNITION |
+| 6 | **Active — Elite** | Active **AND** `CURRENT_PROGRAM` = ELITE |
+| 7 | **Active — Male** | Active **AND** `GENDER` (Col G) = MALE |
+| 8 | **Active — Female** | Active **AND** `GENDER` (Col G) = FEMALE |
+
+### Charts
+
+| # | Chart | Filter / group-by |
+|---|---|---|
+| 1 | **Active by Program** | Active, grouped by `CURRENT_PROGRAM` (Col J) |
+| 2 | **Active by Gender** | Active, grouped by `GENDER` (Col G) |
+| 3 | **Active by Status** | Grouped by `CURRENT_STATUS` (Col S) |
+| 4 | **Active by Country** | Active, grouped by `COUNTRY` (Col H) |
+| 5 | **Active by Payment Cadence** | Active, grouped by `PAYMENT_CADENCE` (Col X) |
+| 6 | **Active by Head Coach** | Active, grouped by `HEAD_COACH` (Col I) |
+| 7 | **Active by Support Coach** | Active, grouped by `SUPPORT_COACH` (Col R) |
+
+---
+
 ## The six phases
 
 Each phase is a self-contained milestone. Phases 0–4 are shipped; Phase 5 (login) is live with the AI assistant wiring still to come.

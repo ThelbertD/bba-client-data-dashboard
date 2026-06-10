@@ -226,6 +226,40 @@
     </div>
   </section>
 
+  <!-- LATEST REVIEW -->
+  <section class="section">
+    <div class="section-tag">Latest review</div>
+    <h2>"As of now" current snapshot — front page</h2>
+    <p class="lead">New review of the main front page: the team wants an <strong>"AS OF NOW — CURRENT"</strong> snapshot — a live, point-in-time view of the active book (not lifetime totals). Below are the requested scoreboard tiles and charts with their exact filter logic against the source sheet.</p>
+
+    <div style="margin:0 0 26px;padding:14px 18px;background:var(--accent-dim);border:1px solid var(--accent);border-radius:10px;font-size:13px;color:var(--accent-soft);font-weight:600">
+      <strong>Active</strong> = CURRENT_STATUS (Col S) is one of ACTIVE_ONBOARDING + ACTIVE_COACHING + ACTIVE_PAUSED + ACTIVE_LIFE — used across every tile and chart below.
+    </div>
+
+    <h3 style="font-size:14px;font-weight:800;color:var(--white);margin:0 0 14px;letter-spacing:.02em">Scoreboard tiles</h3>
+    <div class="feature-list">
+      <div class="feat"><div class="icon" style="background:var(--accent-dim);color:var(--accent)">1</div><div><div class="title">Active clients</div><div class="desc">CURRENT_STATUS in ACTIVE_ONBOARDING + ACTIVE_COACHING + ACTIVE_PAUSED + ACTIVE_LIFE.</div></div></div>
+      <div class="feat"><div class="icon" style="background:var(--accent-dim);color:var(--accent)">2</div><div><div class="title">Paying clients</div><div class="desc">CURRENT_STATUS in ACTIVE_ONBOARDING + ACTIVE_COACHING.</div></div></div>
+      <div class="feat"><div class="icon" style="background:var(--accent-dim);color:var(--accent)">3</div><div><div class="title">Active — Challenge</div><div class="desc">Active AND CURRENT_PROGRAM (Col J) = CHALLENGE.</div></div></div>
+      <div class="feat"><div class="icon" style="background:var(--accent-dim);color:var(--accent)">4</div><div><div class="title">Active — Basecamp</div><div class="desc">Active AND CURRENT_PROGRAM (Col J) = BASECAMP.</div></div></div>
+      <div class="feat"><div class="icon" style="background:var(--accent-dim);color:var(--accent)">5</div><div><div class="title">Active — Ignition</div><div class="desc">Active AND CURRENT_PROGRAM (Col J) = IGNITION.</div></div></div>
+      <div class="feat"><div class="icon" style="background:var(--accent-dim);color:var(--accent)">6</div><div><div class="title">Active — Elite</div><div class="desc">Active AND CURRENT_PROGRAM (Col J) = ELITE.</div></div></div>
+      <div class="feat"><div class="icon" style="background:var(--accent-dim);color:var(--accent)">7</div><div><div class="title">Active — Male</div><div class="desc">Active AND GENDER (Col G) = MALE.</div></div></div>
+      <div class="feat"><div class="icon" style="background:var(--accent-dim);color:var(--accent)">8</div><div><div class="title">Active — Female</div><div class="desc">Active AND GENDER (Col G) = FEMALE.</div></div></div>
+    </div>
+
+    <h3 style="font-size:14px;font-weight:800;color:var(--white);margin:28px 0 14px;letter-spacing:.02em">Charts</h3>
+    <div class="feature-list">
+      <div class="feat"><div class="icon" style="background:var(--accent-dim);color:var(--accent)">▣</div><div><div class="title">Active by Program</div><div class="desc">Active, grouped by CURRENT_PROGRAM (Col J).</div></div></div>
+      <div class="feat"><div class="icon" style="background:var(--accent-dim);color:var(--accent)">▣</div><div><div class="title">Active by Gender</div><div class="desc">Active, grouped by GENDER (Col G).</div></div></div>
+      <div class="feat"><div class="icon" style="background:var(--accent-dim);color:var(--accent)">▣</div><div><div class="title">Active by Status</div><div class="desc">Grouped by CURRENT_STATUS (Col S).</div></div></div>
+      <div class="feat"><div class="icon" style="background:var(--accent-dim);color:var(--accent)">▣</div><div><div class="title">Active by Country</div><div class="desc">Active, grouped by COUNTRY (Col H).</div></div></div>
+      <div class="feat"><div class="icon" style="background:var(--accent-dim);color:var(--accent)">▣</div><div><div class="title">Active by Payment Cadence</div><div class="desc">Active, grouped by PAYMENT_CADENCE (Col X).</div></div></div>
+      <div class="feat"><div class="icon" style="background:var(--accent-dim);color:var(--accent)">▣</div><div><div class="title">Active by Head Coach</div><div class="desc">Active, grouped by HEAD_COACH (Col I).</div></div></div>
+      <div class="feat"><div class="icon" style="background:var(--accent-dim);color:var(--accent)">▣</div><div><div class="title">Active by Support Coach</div><div class="desc">Active, grouped by SUPPORT_COACH (Col R).</div></div></div>
+    </div>
+  </section>
+
   <!-- PHASE TIMELINE -->
   <section class="section">
     <div class="section-tag">Build plan</div>
