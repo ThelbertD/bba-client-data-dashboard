@@ -876,9 +876,6 @@
   <div class="section-title">Headline KPIs <span class="pill">The 4 Jase watches</span></div>
   <div class="headline-row" id="headlineRow"></div>
 
-  <div class="section-title">Month-to-date snapshot <span class="pill">18 metrics</span></div>
-  <div class="kpi-grid" id="kpiGrid"></div>
-
   <div class="section-title">Client journey funnel <span class="pill">Onboarding → Active → Cancelled</span></div>
   <div class="funnel-card">
     <div class="funnel-stages" id="funnelStages"></div>
@@ -1486,24 +1483,6 @@ function openHeadlineDrill(key){
   }
 }
 
-function renderKpis(metrics){
-  const grid = $('#kpiGrid');
-  grid.innerHTML = metrics.kpis.map(k => {
-    if(k.format === 'blank') return '<div class="kpi" style="visibility:hidden"></div>';
-    const cls = ['kpi', 'clickable'];
-    if(k.highlight === 'rate') cls.push('rate');
-    if(k.highlight === 'hero') cls.push('hero');
-    return `
-      <button type="button" class="${cls.join(' ')}" data-kpi="${k.key}" title="Click to view ${escapeHtml(KPI_FILTERS[k.key]?.label || k.label)}">
-        <div class="label">${escapeHtml(k.label)}</div>
-        <div class="value">${fmtValue(k.value, k.format)}</div>
-      </button>`;
-  }).join('');
-  grid.querySelectorAll('[data-kpi]').forEach(btn => {
-    btn.addEventListener('click', () => openDrillDown(btn.dataset.kpi));
-  });
-}
-
 const ACCENT     = '#38b6ff';
 const ACCENT_DIM = 'rgba(56,182,255,.25)';
 const GRID       = 'rgba(255,255,255,.06)';
@@ -1982,7 +1961,6 @@ function render(){
   renderSnapshot();
   renderSnapshotCharts();
   renderHeadline(metrics);
-  renderKpis(metrics);
   renderFunnel(metrics);
   renderCalendar();
   renderSupportCoachLeaderboard();
