@@ -1502,7 +1502,7 @@ function renderBarChart(canvasId, items, opts = {}){
       labels,
       datasets: [{
         data: values,
-        backgroundColor: opts.multicolor ? PALETTE.slice(0, items.length) : ACCENT,
+        backgroundColor: opts.multicolor ? items.map((_, i) => PALETTE[i % PALETTE.length]) : ACCENT,
         borderColor: opts.multicolor ? undefined : ACCENT,
         borderWidth: 0,
         borderRadius: 6,
@@ -1584,12 +1584,12 @@ function renderSnapshotCharts(){
   renderBarChart('snapProgram',   topN(counter(active, c => c.program), 8),        { multicolor:true });
   renderBarChart('snapGender',    topN(counter(active, c => c.gender), 4),         { multicolor:true });
   renderBarChart('snapStatus',    topN(counter(active, c => c.status.replace('ACTIVE_','')), 6), { multicolor:true });
-  renderBarChart('snapCountry',   topN(counter(active, c => c.country), 8),        { horizontal:true });
+  renderBarChart('snapCountry',   topN(counter(active, c => c.country), 8),        { multicolor:true });
   renderBarChart('snapCadence',   topN(counter(active, c => c.paymentCadence), 6), { multicolor:true });
-  renderBarChart('snapHeadCoach', topN(counter(active, c => c.headCoach), 8),      {});
+  renderBarChart('snapHeadCoach', topN(counter(active, c => c.headCoach), 8),      { multicolor:true });
   // Support coach: drop the non-coach placeholders (N/A, OB TEAM, UNASSIGNED, blank)
   const supActive = active.filter(c => !SUPPORT_COACH_EXCLUDE.has((c.supportCoach || '').trim().toUpperCase()));
-  renderBarChart('snapSupportCoach', topN(counter(supActive, c => c.supportCoach), 10), { horizontal:true });
+  renderBarChart('snapSupportCoach', topN(counter(supActive, c => c.supportCoach), 10), { multicolor:true });
 }
 
 /* Drill that uses the snapshot's own (unfiltered) matched set, so the list
