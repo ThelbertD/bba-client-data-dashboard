@@ -718,7 +718,6 @@
   .fe-note{font-size:11px;color:var(--grey-dim);margin-top:7px}
 
   /* === Current snapshot (as of now) tiles === */
-  .snap-charts{display:flex;flex-direction:column;gap:16px;margin-top:16px}
   .snapshot-grid{display:grid;grid-template-columns:repeat(4,1fr);gap:12px}
   .snap-tile{background:var(--panel);border:1px solid var(--line);border-top:3px solid var(--accent);
     border-radius:14px;padding:18px;text-align:left;cursor:pointer;font-family:inherit;
@@ -860,15 +859,19 @@
   <div class="snapshot-grid" id="snapshotGrid"></div>
 
   <div class="section-title">Active book — breakdowns <span class="pill">As of now · current active clients</span></div>
-  <div class="snap-charts">
-    <div class="chart-card"><h3>Active by Program</h3><div class="chart-wrap" style="height:240px"><canvas id="snapProgram"></canvas></div></div>
-    <div class="chart-card"><h3>Active by Gender</h3><div class="chart-wrap" style="height:180px"><canvas id="snapGender"></canvas></div></div>
-    <div class="chart-card"><h3>Active by Status</h3><div class="chart-wrap" style="height:210px"><canvas id="snapStatus"></canvas></div></div>
-    <div class="chart-card"><h3>Active by Country</h3><div class="chart-wrap" style="height:320px"><canvas id="snapCountry"></canvas></div></div>
-    <div class="chart-card"><h3>Active by Payment Cadence</h3><div class="chart-wrap" style="height:300px"><canvas id="snapCadence"></canvas></div></div>
-    <div class="chart-card"><h3>Active by Head Coach</h3><div class="chart-wrap" style="height:300px"><canvas id="snapHeadCoach"></canvas></div></div>
-    <div class="chart-card"><h3>Active by Support Coach</h3><div class="chart-wrap" style="height:360px"><canvas id="snapSupportCoach"></canvas></div></div>
+  <div class="charts">
+    <div class="chart-card"><h3>Active by Program</h3><div class="chart-wrap"><canvas id="snapProgram"></canvas></div></div>
+    <div class="chart-card"><h3>Active by Gender</h3><div class="chart-wrap"><canvas id="snapGender"></canvas></div></div>
   </div>
+  <div class="charts">
+    <div class="chart-card"><h3>Active by Status</h3><div class="chart-wrap"><canvas id="snapStatus"></canvas></div></div>
+    <div class="chart-card"><h3>Active by Country</h3><div class="chart-wrap"><canvas id="snapCountry"></canvas></div></div>
+  </div>
+  <div class="charts">
+    <div class="chart-card"><h3>Active by Payment Cadence</h3><div class="chart-wrap"><canvas id="snapCadence"></canvas></div></div>
+    <div class="chart-card"><h3>Active by Head Coach</h3><div class="chart-wrap"><canvas id="snapHeadCoach"></canvas></div></div>
+  </div>
+  <div class="chart-card" style="margin-top:16px"><h3>Active by Support Coach</h3><div class="chart-wrap" style="height:340px"><canvas id="snapSupportCoach"></canvas></div></div>
 
   <div class="section-title">Headline KPIs <span class="pill">The 4 Jase watches</span></div>
   <div class="headline-row" id="headlineRow"></div>
@@ -1578,14 +1581,12 @@ function renderSnapshot(){
 function renderSnapshotCharts(){
   const all = STATE.raw?.clients || [];
   const active = all.filter(c => SNAPSHOT_ACTIVE.has(c.status));
-  // All breakdown charts use the same look as the Support Coach chart:
-  // full-width, horizontal, solid accent bars.
-  renderBarChart('snapProgram',   topN(counter(active, c => c.program), 8),        { horizontal:true });
-  renderBarChart('snapGender',    topN(counter(active, c => c.gender), 4),         { horizontal:true });
-  renderBarChart('snapStatus',    topN(counter(active, c => c.status.replace('ACTIVE_','')), 6), { horizontal:true });
+  renderBarChart('snapProgram',   topN(counter(active, c => c.program), 8),        { multicolor:true });
+  renderBarChart('snapGender',    topN(counter(active, c => c.gender), 4),         { multicolor:true });
+  renderBarChart('snapStatus',    topN(counter(active, c => c.status.replace('ACTIVE_','')), 6), { multicolor:true });
   renderBarChart('snapCountry',   topN(counter(active, c => c.country), 8),        { horizontal:true });
-  renderBarChart('snapCadence',   topN(counter(active, c => c.paymentCadence), 6), { horizontal:true });
-  renderBarChart('snapHeadCoach', topN(counter(active, c => c.headCoach), 8),      { horizontal:true });
+  renderBarChart('snapCadence',   topN(counter(active, c => c.paymentCadence), 6), { multicolor:true });
+  renderBarChart('snapHeadCoach', topN(counter(active, c => c.headCoach), 8),      {});
   // Support coach: drop the non-coach placeholders (N/A, OB TEAM, UNASSIGNED, blank)
   const supActive = active.filter(c => !SUPPORT_COACH_EXCLUDE.has((c.supportCoach || '').trim().toUpperCase()));
   renderBarChart('snapSupportCoach', topN(counter(supActive, c => c.supportCoach), 10), { horizontal:true });
