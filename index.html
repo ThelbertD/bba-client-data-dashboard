@@ -246,6 +246,53 @@
   .date-input input[type=date]:hover::-webkit-calendar-picker-indicator{opacity:1}
   .range-arrow{color:var(--grey);font-weight:700;font-size:14px}
 
+  /* === Range picker (dual-calendar popover) — dark theme (matches dashboard) === */
+  .rangepicker{position:relative;display:inline-block}
+  .rp-trigger{display:inline-flex;align-items:center;justify-content:space-between;gap:16px;
+    min-width:268px;background:#fff;border:1px solid #fff;color:#000;
+    border-radius:12px;padding:11px 16px;font-size:15px;font-weight:600;cursor:pointer;font-family:inherit;
+    box-shadow:0 2px 8px rgba(0,0,0,.18)}
+  .rp-trigger:hover{box-shadow:0 4px 14px rgba(0,0,0,.26)}
+  .rp-trigger.open{box-shadow:0 4px 16px rgba(0,0,0,.3)}
+  .rp-caret{color:#5c616b;font-size:12px}
+  .rp-pop{position:absolute;top:calc(100% + 10px);left:0;z-index:80;width:600px;
+    background:var(--panel);border:1px solid var(--line);border-radius:16px;overflow:hidden;color:var(--white);
+    box-shadow:0 26px 70px rgba(0,0,0,.55)}
+  .rp-pop[hidden]{display:none}
+  .rp-pop-head{display:flex;justify-content:flex-end;background:var(--bg);padding:14px 18px;border-bottom:1px solid var(--line)}
+  .rp-preset select{background:var(--bg);color:var(--white);border:1px solid var(--line);
+    border-radius:10px;padding:9px 14px;font-size:14px;font-weight:700;cursor:pointer;font-family:inherit}
+  .rp-preset select:hover{border-color:var(--accent)}
+  .rp-preset select:focus{border-color:var(--accent);outline:none}
+  .rp-cals{display:grid;grid-template-columns:1fr 1fr;gap:24px;padding:20px 24px 4px}
+  .rp-cal-cap{text-align:center;font-size:13px;font-weight:700;color:var(--grey);margin-bottom:14px}
+  .rp-cal-nav{display:flex;align-items:center;justify-content:space-between;margin-bottom:4px;padding:0 2px}
+  .rp-mon{font-size:14px;font-weight:700;color:var(--white);display:inline-flex;align-items:center}
+  .rp-mcaret{color:var(--grey);font-size:10px;margin-left:5px}
+  .rp-nav-group{display:flex;gap:6px}
+  .rp-nav{width:30px;height:30px;border-radius:8px;border:1px solid var(--line);background:var(--bg);
+    color:var(--grey);cursor:pointer;display:flex;align-items:center;justify-content:center;
+    font-size:16px;line-height:1;font-family:inherit}
+  .rp-nav:hover{background:var(--accent-dim);border-color:var(--accent);color:var(--accent-soft)}
+  .rp-grid{display:grid;grid-template-columns:repeat(7,1fr);gap:2px;align-items:center}
+  .rp-dow{text-align:center;font-size:12px;font-weight:600;color:var(--grey-dim);padding:8px 0 6px;
+    border-bottom:1px solid var(--line)}
+  .rp-monthtag{grid-column:1/-1;text-align:left;font-size:12px;font-weight:600;color:var(--grey-dim);padding:8px 2px 4px}
+  .rp-day{aspect-ratio:1/1;display:flex;align-items:center;justify-content:center;font-size:13.5px;
+    color:var(--white);background:transparent;border:0;border-radius:50%;cursor:pointer;
+    font-family:inherit;font-variant-numeric:tabular-nums;padding:0}
+  .rp-day:hover{background:var(--panel2)}
+  .rp-day.muted{color:var(--grey-dim)}
+  .rp-day.today{box-shadow:inset 0 0 0 1.5px var(--accent-soft)}
+  .rp-day.in-range{background:var(--accent-dim)}
+  .rp-day.sel{background:var(--accent);color:#0c2230;font-weight:800;box-shadow:none}
+  .rp-day.empty{visibility:hidden;cursor:default}
+  .rp-foot{display:flex;justify-content:flex-end;padding:8px 24px 22px}
+  .rp-apply{background:var(--accent);color:#0c2230;border:0;border-radius:26px;
+    padding:11px 32px;font-size:15px;font-weight:800;cursor:pointer;font-family:inherit}
+  .rp-apply:hover{filter:brightness(1.08)}
+  @media(max-width:640px){ .rp-pop{width:calc(100vw - 32px)} .rp-cals{grid-template-columns:1fr;gap:24px} }
+
   .presets{display:flex;gap:5px;flex-wrap:wrap;background:var(--panel);border:1px solid var(--line);
     border-radius:10px;padding:4px}
   .presets button{background:transparent;border:0;color:var(--grey);
@@ -819,25 +866,56 @@
       <p class="sub">Active book of business, programs, payments, retention, and renewals — sourced from <code style="color:var(--accent-soft)">TRACKER - CLIENT SUCCESS</code>.</p>
     </div>
     <div class="controls">
-      <div class="date-controls">
-        <div class="date-input">
-          <label for="dateFrom">From</label>
-          <input type="date" id="dateFrom">
+      <div class="rangepicker" id="rangePicker">
+        <button type="button" class="rp-trigger" id="rpTrigger" aria-haspopup="dialog" aria-expanded="false">
+          <span class="rp-trigger-label" id="rpTriggerLabel">This month</span>
+          <span class="rp-caret">▾</span>
+        </button>
+        <div class="rp-pop" id="rpPop" role="dialog" aria-label="Select date range" hidden>
+          <div class="rp-pop-head">
+            <div class="rp-preset">
+              <select id="rpPreset" aria-label="Quick range">
+                <option value="all">All time</option>
+                <option value="today">Today</option>
+                <option value="7d">Last 7 days</option>
+                <option value="30d">Last 30 days</option>
+                <option value="month">This month</option>
+                <option value="qtd">This quarter</option>
+                <option value="ytd">This year</option>
+                <option value="custom">Custom</option>
+              </select>
+            </div>
+          </div>
+          <div class="rp-cals">
+            <div class="rp-cal">
+              <div class="rp-cal-cap">Start Date</div>
+              <div class="rp-cal-nav">
+                <div class="rp-mon" id="rpMonStart">—<span class="rp-mcaret">⌄</span></div>
+                <div class="rp-nav-group">
+                  <button type="button" class="rp-nav" data-cal="start" data-dir="-1" aria-label="Previous month">‹</button>
+                  <button type="button" class="rp-nav" data-cal="start" data-dir="1" aria-label="Next month">›</button>
+                </div>
+              </div>
+              <div class="rp-grid" id="rpGridStart"></div>
+            </div>
+            <div class="rp-cal">
+              <div class="rp-cal-cap">End Date</div>
+              <div class="rp-cal-nav">
+                <div class="rp-mon" id="rpMonEnd">—<span class="rp-mcaret">⌄</span></div>
+                <div class="rp-nav-group">
+                  <button type="button" class="rp-nav" data-cal="end" data-dir="-1" aria-label="Previous month">‹</button>
+                  <button type="button" class="rp-nav" data-cal="end" data-dir="1" aria-label="Next month">›</button>
+                </div>
+              </div>
+              <div class="rp-grid" id="rpGridEnd"></div>
+            </div>
+          </div>
+          <div class="rp-foot">
+            <button type="button" class="rp-apply" id="rpApply">Apply</button>
+          </div>
         </div>
-        <span class="range-arrow">→</span>
-        <div class="date-input">
-          <label for="dateTo">To</label>
-          <input type="date" id="dateTo">
-        </div>
-      </div>
-      <div class="presets" id="presets">
-        <button data-preset="today">Today</button>
-        <button data-preset="7d">7D</button>
-        <button data-preset="30d">30D</button>
-        <button data-preset="mtd">MTD</button>
-        <button data-preset="qtd">QTD</button>
-        <button data-preset="ytd">YTD</button>
-        <button data-preset="all" class="active">All</button>
+        <input type="hidden" id="dateFrom">
+        <input type="hidden" id="dateTo">
       </div>
       <div class="coach-pick" id="coachPick" title="Support Coach filter">
         <label for="coachSelect" aria-label="Support Coach">👤</label>
@@ -855,10 +933,10 @@
     <button class="clear" id="filterClear">Clear filter</button>
   </div>
 
-  <div class="section-title">As of now — current snapshot <span class="pill">Live · active book · not date-filtered</span></div>
+  <div class="section-title">As of now — current snapshot <span class="pill" id="snapScopePill">Live · active book · not date-filtered</span></div>
   <div class="snapshot-grid" id="snapshotGrid"></div>
 
-  <div class="section-title">Active book — breakdowns <span class="pill">As of now · current active clients</span></div>
+  <div class="section-title">Active book — breakdowns <span class="pill" id="snapChartsScopePill">As of now · current active clients</span></div>
   <div class="charts">
     <div class="chart-card"><h3>Active by Program</h3><div class="chart-wrap"><canvas id="snapProgram"></canvas></div></div>
     <div class="chart-card"><h3>Active by Gender</h3><div class="chart-wrap"><canvas id="snapGender"></canvas></div></div>
@@ -1140,7 +1218,7 @@ const ACTIVE_STATUSES = new Set(['ACTIVE_COACHING','ACTIVE_ONBOARDING','ACTIVE_L
 
 const STATE = {
   raw: null,                            // full data.json (with clients[])
-  filter: { from: null, to: null, preset: 'all' },
+  filter: presetRange('month'),        // default to the current calendar month (e.g. Jun 1 – Jun 30)
   coachFilter: null,                    // null = all coaches; else exact supportCoach name
   headCoachFilter: null,                // null = all; else exact headCoach name
   computed: null,
@@ -1159,6 +1237,10 @@ function presetRange(name){
     case 'today': from = to; break;
     case '7d':  from = toISO(new Date(today.getTime() - 6*86400000)); break;
     case '30d': from = toISO(new Date(today.getTime() - 29*86400000)); break;
+    case 'month': // full current calendar month, 1st → last day (e.g. Jun 1 – Jun 30)
+      return { from: toISO(new Date(today.getFullYear(), today.getMonth(), 1)),
+               to:   toISO(new Date(today.getFullYear(), today.getMonth()+1, 0)),
+               preset: 'month' };
     case 'mtd': from = toISO(new Date(today.getFullYear(), today.getMonth(), 1)); break;
     case 'qtd': from = toISO(new Date(today.getFullYear(), Math.floor(today.getMonth()/3)*3, 1)); break;
     case 'ytd': from = toISO(new Date(today.getFullYear(), 0, 1)); break;
@@ -1171,7 +1253,7 @@ function filterLabel(){
   const { from, to, preset } = STATE.filter;
   if(preset === 'all' || (!from && !to)) return 'All time';
   if(preset && preset !== 'custom'){
-    return { today:'Today', '7d':'Last 7 days', '30d':'Last 30 days',
+    return { today:'Today', '7d':'Last 7 days', '30d':'Last 30 days', month:'This month',
              mtd:'Month to date', qtd:'Quarter to date', ytd:'Year to date' }[preset] || 'Custom';
   }
   return `${from || '…'} → ${to || '…'}`;
@@ -1527,14 +1609,35 @@ function renderBarChart(canvasId, items, opts = {}){
 /* =================================================================
    AS-OF-NOW CURRENT SNAPSHOT — front-page scoreboard
    -----------------------------------------------------------------
-   Per spec, filters are exact and applied to the FULL current book
-   (STATE.raw.clients), independent of the date-range filter.
+   Status filters are exact; the working set follows the Support Coach,
+   Head Coach, and date-range selectors (via snapshotBook()/filterClients),
+   so every tile + chart updates live with date + coaches.
      Active  = CURRENT_STATUS in ACTIVE_ONBOARDING + ACTIVE_COACHING
                                 + ACTIVE_PAUSED + ACTIVE_LIFE
      Paying  = CURRENT_STATUS in ACTIVE_ONBOARDING + ACTIVE_COACHING
    ================================================================= */
 const SNAPSHOT_ACTIVE = new Set(['ACTIVE_ONBOARDING','ACTIVE_COACHING','ACTIVE_PAUSED','ACTIVE_LIFE']);
 const SNAPSHOT_PAYING = new Set(['ACTIVE_ONBOARDING','ACTIVE_COACHING']);
+
+/* The snapshot honours the Support Coach + Head Coach selectors (so it reflects
+   "the coach I select"), but stays independent of the DATE filter — it's always
+   the current book "as of now". */
+function snapshotBook(){
+  // Honour BOTH coach selectors AND the selected date range — every snapshot
+  // tile and chart now updates live with date + coaches, using the exact same
+  // filtered set the rest of the dashboard runs on (filterClients()).
+  return filterClients();
+}
+
+/* Label for the active scope (coaches + date), shown in the snapshot pills. */
+function snapshotScopeLabel(){
+  const parts = [];
+  if(STATE.headCoachFilter) parts.push('Head: ' + titleCase(STATE.headCoachFilter));
+  if(STATE.coachFilter)     parts.push('Support: ' + titleCase(STATE.coachFilter));
+  const { preset, from, to } = STATE.filter;
+  if(!(preset === 'all' || (!from && !to))) parts.push(filterLabel());
+  return parts.join(' · ');
+}
 
 function snapshotTiles(){
   const isActive = c => SNAPSHOT_ACTIVE.has(c.status);
@@ -1555,7 +1658,10 @@ function snapshotTiles(){
 function renderSnapshot(){
   const grid = $('#snapshotGrid');
   if(!grid) return;
-  const all = STATE.raw?.clients || [];
+  const all = snapshotBook();
+  const scope = snapshotScopeLabel();
+  const pill = $('#snapScopePill');
+  if(pill) pill.textContent = scope || 'Live · active book';
   const tiles = snapshotTiles();
   grid.innerHTML = tiles.map((t, i) => {
     const n = all.filter(t.match).length;
@@ -1577,9 +1683,12 @@ function renderSnapshot(){
 
 /* Charts for the current active book — same SNAPSHOT_ACTIVE definition,
    grouped by program / gender / status / country / cadence / coaches.
-   Built from the full current book, independent of the date filter. */
+   Built from snapshotBook(), so they follow the date + coach selectors. */
 function renderSnapshotCharts(){
-  const all = STATE.raw?.clients || [];
+  const all = snapshotBook();
+  const scope = snapshotScopeLabel();
+  const pill = $('#snapChartsScopePill');
+  if(pill) pill.textContent = scope ? scope + ' · current active clients' : 'As of now · current active clients';
   const active = all.filter(c => SNAPSHOT_ACTIVE.has(c.status));
   renderBarChart('snapProgram',   topN(counter(active, c => c.program), 8),        { multicolor:true });
   renderBarChart('snapGender',    topN(counter(active, c => c.gender), 4),         { multicolor:true });
@@ -1592,8 +1701,8 @@ function renderSnapshotCharts(){
   renderBarChart('snapSupportCoach', topN(counter(supActive, c => c.supportCoach), 10), { multicolor:true });
 }
 
-/* Drill that uses the snapshot's own (unfiltered) matched set, so the list
-   always matches the tile count regardless of the page's date filter. */
+/* Drill opens on the snapshot's own matched set (same date + coach scope as
+   the tile), so the client list always matches the tile count exactly. */
 function openSnapshotDrill(label, matched){
   drillState = { key:'__snapshot__', label, all: matched, visible: matched, sortKey:null, sortDir:1 };
   $('#drillIcon').textContent = '◴';
@@ -1962,6 +2071,12 @@ function render(){
   renderSnapshotCharts();
   renderHeadline(metrics);
   renderFunnel(metrics);
+  // Keep the monthly calendar in step with the picker — jump it to the
+  // selected range's start month so the events you see trace to those dates.
+  if(STATE.filter.from){
+    const [fy, fm] = STATE.filter.from.split('-').map(Number);
+    calState.year = fy; calState.month = fm - 1;
+  }
   renderCalendar();
   renderSupportCoachLeaderboard();
   renderClosers(metrics);
@@ -2251,6 +2366,7 @@ function applyFilter(filter, { updateInputs = true, updatePresets = true } = {})
   if(updatePresets){
     $$('#presets button').forEach(b => b.classList.toggle('active', b.dataset.preset === filter.preset));
   }
+  updateRangeTrigger();
   if(STATE.raw) render();
 }
 
@@ -2279,6 +2395,161 @@ $('#headCoachSelect')?.addEventListener('change', (e) => setHeadCoachFilter(e.ta
 $('#reloadBtn')?.addEventListener('click', loadData);
 
 /* =================================================================
+   RANGE PICKER — dual-calendar popover (Start Date / End Date)
+   Drives the same STATE.filter via applyFilter(); date-filter only,
+   independent of the snapshot. #dateFrom/#dateTo are hidden mirrors.
+   ================================================================= */
+const RP_MONTHS = ['Jan','Feb','Mar','Apr','May','Jun','Jul','Aug','Sep','Oct','Nov','Dec'];
+const RP_DOW    = ['S','M','T','W','T','F','S'];
+const RP = {
+  trigger:$('#rpTrigger'), pop:$('#rpPop'), label:$('#rpTriggerLabel'),
+  preset:$('#rpPreset'), apply:$('#rpApply'),
+  gridStart:$('#rpGridStart'), gridEnd:$('#rpGridEnd'),
+  monStart:$('#rpMonStart'), monEnd:$('#rpMonEnd'),
+  draft:{ start:null, end:null, preset:'all' },
+  view:{ start:null, end:null }
+};
+
+function rpParseISO(s){ if(!s) return null; const [y,m,d] = s.split('-').map(Number); return new Date(y, m-1, d); }
+function rpSameDay(a,b){ return !!a && !!b && a.getFullYear()===b.getFullYear() && a.getMonth()===b.getMonth() && a.getDate()===b.getDate(); }
+function rpFmtNice(d){ return `${RP_MONTHS[d.getMonth()]} ${d.getDate()}, ${d.getFullYear()}`; }
+
+function rpTriggerText(){
+  const { from, to, preset } = STATE.filter;
+  if(preset === 'all' || (!from && !to)) return 'All time';
+  const f = rpParseISO(from), t = rpParseISO(to);
+  if(f && t) return rpSameDay(f,t) ? rpFmtNice(f) : `${rpFmtNice(f)} - ${rpFmtNice(t)}`;
+  if(f) return `${rpFmtNice(f)} - …`;
+  return 'Custom';
+}
+// Called from applyFilter — guarded so it's safe even before the picker exists.
+function updateRangeTrigger(){
+  const el = document.getElementById('rpTriggerLabel');
+  if(el) el.textContent = rpTriggerText();
+}
+
+function rpViewFor(start, end){
+  const today = new Date();
+  const s = start || new Date(today.getFullYear(), today.getMonth(), 1);
+  const e = end || s;
+  const vs = { y:s.getFullYear(), m:s.getMonth() };
+  let ve = { y:e.getFullYear(), m:e.getMonth() };
+  if(ve.y === vs.y && ve.m === vs.m){            // keep the two calendars on different months
+    const nx = new Date(ve.y, ve.m+1, 1); ve = { y:nx.getFullYear(), m:nx.getMonth() };
+  }
+  return { start:vs, end:ve };
+}
+
+function rpRenderCal(which){
+  const grid = which === 'start' ? RP.gridStart : RP.gridEnd;
+  const monEl = which === 'start' ? RP.monStart : RP.monEnd;
+  const v = RP.view[which];
+  if(!grid || !v) return;
+  monEl.innerHTML = `${RP_MONTHS[v.m].toUpperCase()} ${v.y}<span class="rp-mcaret">⌄</span>`;
+  const today = new Date(); today.setHours(0,0,0,0);
+  const startDow = new Date(v.y, v.m, 1).getDay();
+  const days = new Date(v.y, v.m+1, 0).getDate();
+  const s = RP.draft.start, e = RP.draft.end;
+  let html = RP_DOW.map(d => `<div class="rp-dow">${d}</div>`).join('');
+  html += `<div class="rp-monthtag">${RP_MONTHS[v.m].toUpperCase()}</div>`;
+  for(let i=0;i<startDow;i++) html += `<div class="rp-day empty"></div>`;
+  for(let d=1; d<=days; d++){
+    const cur = new Date(v.y, v.m, d);
+    const cls = ['rp-day'];
+    if(rpSameDay(cur, today)) cls.push('today');
+    // Endpoint-only highlight to match the design — start & end as solid circles.
+    if(rpSameDay(cur, s) || rpSameDay(cur, e)) cls.push('sel');
+    html += `<button type="button" class="${cls.join(' ')}" data-rp-cal="${which}" data-rp-d="${toISO(cur)}">${d}</button>`;
+  }
+  grid.innerHTML = html;
+}
+function rpRender(){ rpRenderCal('start'); rpRenderCal('end'); }
+
+function rpSyncFromState(){
+  RP.draft.start  = rpParseISO(STATE.filter.from);
+  RP.draft.end    = rpParseISO(STATE.filter.to);
+  RP.draft.preset = STATE.filter.preset || 'all';
+  RP.view = rpViewFor(RP.draft.start, RP.draft.end);
+  if(RP.preset) RP.preset.value = RP.draft.preset;
+  if(RP.label) RP.label.textContent = rpTriggerText();
+  rpRender();
+}
+
+function rpOpen(){ RP.pop.hidden = false; RP.trigger.classList.add('open'); RP.trigger.setAttribute('aria-expanded','true'); rpSyncFromState(); }
+function rpClose(){ RP.pop.hidden = true; RP.trigger.classList.remove('open'); RP.trigger.setAttribute('aria-expanded','false'); }
+
+if(RP.trigger){
+  RP.trigger.addEventListener('click', e => { e.stopPropagation(); RP.pop.hidden ? rpOpen() : rpClose(); });
+  RP.pop.addEventListener('click', e => e.stopPropagation());
+  document.addEventListener('click', () => { if(!RP.pop.hidden) rpClose(); });
+  document.addEventListener('keydown', e => { if(e.key === 'Escape' && !RP.pop.hidden) rpClose(); });
+
+  // Month navigation (each calendar moves independently)
+  RP.pop.querySelectorAll('.rp-nav').forEach(btn => {
+    btn.addEventListener('click', () => {
+      const which = btn.dataset.cal, dir = parseInt(btn.dataset.dir, 10);
+      const v = RP.view[which];
+      const nd = new Date(v.y, v.m + dir, 1);
+      RP.view[which] = { y:nd.getFullYear(), m:nd.getMonth() };
+      rpRenderCal(which);
+    });
+  });
+
+  // Day selection (delegated): start-calendar sets start, end-calendar sets end.
+  // Applies LIVE — the whole dashboard re-filters to the selected range instantly.
+  RP.pop.addEventListener('click', e => {
+    const cell = e.target.closest('[data-rp-d]');
+    if(!cell) return;
+    const which = cell.dataset.rpCal;
+    const d = rpParseISO(cell.dataset.rpD);
+    if(which === 'start'){
+      RP.draft.start = d;
+      if(RP.draft.end && d > RP.draft.end) RP.draft.end = d;
+    } else {
+      RP.draft.end = d;
+      if(RP.draft.start && d < RP.draft.start) RP.draft.start = d;
+    }
+    RP.draft.preset = 'custom';
+    if(RP.preset) RP.preset.value = 'custom';
+    rpRender();
+    rpCommitDraft();            // sync all data to the selected date — no Apply needed
+  });
+
+  // Quick-range dropdown — also applies live
+  RP.preset?.addEventListener('change', () => {
+    const name = RP.preset.value;
+    RP.draft.preset = name;
+    if(name !== 'custom'){
+      const r = presetRange(name);
+      RP.draft.start = rpParseISO(r.from);
+      RP.draft.end   = rpParseISO(r.to);
+      RP.view = rpViewFor(RP.draft.start, RP.draft.end);
+      rpRender();
+    }
+    rpCommitDraft();
+  });
+
+  // Apply → commit the current draft and close
+  RP.apply.addEventListener('click', () => { rpCommitDraft(); rpClose(); });
+}
+
+// Push the current picker draft into the shared filter → re-renders every
+// KPI, chart, table, funnel, and the snapshot for that exact date range.
+function rpCommitDraft(){
+  const { start, end, preset } = RP.draft;
+  if(preset && preset !== 'custom'){
+    applyFilter(presetRange(preset));
+  } else if(!start && !end){
+    applyFilter(presetRange('all'));
+  } else {
+    const from = start ? toISO(start) : (end ? toISO(end) : null);
+    const to   = end   ? toISO(end)   : (start ? toISO(start) : null);
+    applyFilter({ from, to, preset:'custom' });
+  }
+}
+updateRangeTrigger();   // initial label
+
+/* =================================================================
    CALENDAR WIDGET
    ================================================================= */
 const calState = { year: new Date().getFullYear(), month: new Date().getMonth() };
@@ -2292,7 +2563,16 @@ function buildMonthEvents(year, month){
   const prefix = `${year}-${String(month+1).padStart(2,'0')}-`;
   const todayISO = toISO(new Date());
 
+  // Trace to the active coach selection — calendar events match the same
+  // population as the rest of the dashboard.
+  const coach = (STATE.coachFilter || '').toUpperCase();
+  const headCoach = (STATE.headCoachFilter || '').toUpperCase();
+  const coachOK = c =>
+    (!coach     || (c.supportCoach || '').toUpperCase() === coach) &&
+    (!headCoach || (c.headCoach    || '').toUpperCase() === headCoach);
+
   for(const c of STATE.raw.clients){
+    if(!coachOK(c)) continue;
     if(c.originDateISO?.startsWith(prefix)){
       const e = events.get(c.originDateISO) || { signups:[], endings:[], pastDue:[] };
       e.signups.push(c);

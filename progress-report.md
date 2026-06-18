@@ -35,9 +35,34 @@ A live, login-protected view of retention, churn, and renewals — sourced from 
 
 ---
 
-## ★ Latest review — "As of now" current snapshot (front page)
+## ★ Latest review — live current snapshot (front page · 15 June 2026)
 
-New review of the **main front page**: the team wants an **"AS OF NOW — CURRENT" snapshot** — a live, point-in-time view of the active book (not lifetime totals). Below are the requested scoreboard tiles and charts with their exact filter logic against the source sheet.
+The front page is live and pulling from **Supabase in realtime** — signed in as `jase@jasestuart.com`, last sync **15 June 2026**. This is the point-in-time picture the team reviewed on the demo: the headline KPIs, the support-coach ranking, the sheet-tab counts, and the client-journey funnel — all reading straight from the source sheet.
+
+### The 4 Jase Watches — headline KPIs
+
+| KPI | Value | Basis |
+|---|---|---|
+| **Churn rate** | **42.1%** | 1,413 cancelled of 3,358 |
+| **Retention rate** | **57.9%** | 1,945 retained of 3,358 |
+| **Renewal rate** | **2.9%** | 84 renewed of 2,907 past onboarding |
+| **Off-boarding** | **1,413** | Paying 1,123 · Challenge 280 |
+
+### Active by Support Coach
+
+**John Paul Apines** leads by far (~330), then Teri Quimbo, Daun Rafal, Patricia Malonzo, Kert Acot, Sam Fuentes, Jeremiah Barredo, Leandra Reyes, Iggy Domingo, and Fran Francisco.
+
+### Client Journey Funnel
+
+Onboarding **3,363** → Active → Cancelled.
+
+### Sheet tabs & counts
+
+RAW 1,877 · CLIENT_NOTES 1,885 · DATA VALIDATION DROP 18 · OFFBOARDED 874 · ONBOARDING 222 · MOMENTUM 9 · CELEBRATION 1 · CHALLENGE UPGRADE 12 · CATCHUP CALL 1 · KICKOFF 32 · PROGRAMS 2 · RETREAT 42
+
+---
+
+### How each front-page tile is computed
 
 > **Active definition** used throughout: `CURRENT_STATUS` (Col S) ∈ **ACTIVE_ONBOARDING + ACTIVE_COACHING + ACTIVE_PAUSED + ACTIVE_LIFE**
 
