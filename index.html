@@ -865,57 +865,6 @@
       <p class="sub">Active book of business, programs, payments, retention, and renewals — sourced from <code style="color:var(--accent-soft)">TRACKER - CLIENT SUCCESS</code>.</p>
     </div>
     <div class="controls">
-      <div class="rangepicker" id="rangePicker">
-        <button type="button" class="rp-trigger" id="rpTrigger" aria-haspopup="dialog" aria-expanded="false">
-          <span class="rp-trigger-label" id="rpTriggerLabel">This month</span>
-          <span class="rp-caret">▾</span>
-        </button>
-        <div class="rp-pop" id="rpPop" role="dialog" aria-label="Select date range" hidden>
-          <div class="rp-pop-head">
-            <div class="rp-preset">
-              <select id="rpPreset" aria-label="Quick range">
-                <option value="all">All time</option>
-                <option value="today">Today</option>
-                <option value="7d">Last 7 days</option>
-                <option value="30d">Last 30 days</option>
-                <option value="month">This month</option>
-                <option value="qtd">This quarter</option>
-                <option value="ytd">This year</option>
-                <option value="custom">Custom</option>
-              </select>
-            </div>
-          </div>
-          <div class="rp-cals">
-            <div class="rp-cal">
-              <div class="rp-cal-cap">Start Date</div>
-              <div class="rp-cal-nav">
-                <div class="rp-mon" id="rpMonStart">—<span class="rp-mcaret">⌄</span></div>
-                <div class="rp-nav-group">
-                  <button type="button" class="rp-nav" data-cal="start" data-dir="-1" aria-label="Previous month">‹</button>
-                  <button type="button" class="rp-nav" data-cal="start" data-dir="1" aria-label="Next month">›</button>
-                </div>
-              </div>
-              <div class="rp-grid" id="rpGridStart"></div>
-            </div>
-            <div class="rp-cal">
-              <div class="rp-cal-cap">End Date</div>
-              <div class="rp-cal-nav">
-                <div class="rp-mon" id="rpMonEnd">—<span class="rp-mcaret">⌄</span></div>
-                <div class="rp-nav-group">
-                  <button type="button" class="rp-nav" data-cal="end" data-dir="-1" aria-label="Previous month">‹</button>
-                  <button type="button" class="rp-nav" data-cal="end" data-dir="1" aria-label="Next month">›</button>
-                </div>
-              </div>
-              <div class="rp-grid" id="rpGridEnd"></div>
-            </div>
-          </div>
-          <div class="rp-foot">
-            <button type="button" class="rp-apply" id="rpApply">Apply</button>
-          </div>
-        </div>
-        <input type="hidden" id="dateFrom">
-        <input type="hidden" id="dateTo">
-      </div>
       <div class="coach-pick" id="coachPick" title="Support Coach filter">
         <label for="coachSelect" aria-label="Support Coach">👤</label>
         <select id="coachSelect"><option value="">All coaches</option></select>
@@ -925,11 +874,6 @@
         <select id="headCoachSelect"><option value="">All head coaches</option></select>
       </div>
     </div>
-  </div>
-
-  <div class="filter-summary" id="filterSummary">
-    <span>📅 Filtered to clients with sign-up date <strong id="filterSummaryRange"></strong> — <strong id="filterSummaryCount"></strong> matching</span>
-    <button class="clear" id="filterClear">Clear filter</button>
   </div>
 
   <div class="section-title">As of now — current snapshot <span class="pill" id="snapScopePill">Live · active book · not date-filtered</span></div>
@@ -960,25 +904,6 @@
       <div class="fm-card" id="funnelSurvival"></div>
       <div class="fm-card" id="funnelExit"></div>
     </div>
-  </div>
-
-  <div class="section-title">Calendar <span class="pill">Sign-ups + endings by day</span></div>
-  <div class="cal-card">
-    <div class="cal-head">
-      <div class="title"><span class="month" id="calMonth">—</span></div>
-      <div class="cal-legend">
-        <div class="item"><span class="dot signup"></span>Sign-ups</div>
-        <div class="item"><span class="dot ending"></span>Programs ending</div>
-        <div class="item"><span class="dot past-due"></span>Past due</div>
-      </div>
-      <div class="cal-nav">
-        <button id="calPrev" aria-label="Previous month"><svg viewBox="0 0 24 24"><path d="M15.41 7.41L14 6l-6 6 6 6 1.41-1.41L10.83 12z"/></svg></button>
-        <button id="calToday" class="today">Today</button>
-        <button id="calNext" aria-label="Next month"><svg viewBox="0 0 24 24"><path d="M8.59 16.59L13.17 12 8.59 7.41 10 6l6 6-6 6z"/></svg></button>
-      </div>
-    </div>
-    <div class="cal-grid" id="calGrid"></div>
-    <div class="cal-summary" id="calSummary"></div>
   </div>
 
   <div class="section-title">Support coach performance <span class="pill">Ranked by retention</span></div>
@@ -1263,17 +1188,14 @@ function filterLabel(){
 }
 
 function filterClients(){
-  const { from, to } = STATE.filter;
+  // Date filtering removed — every computation now counts the full RAW set.
+  // Coach selectors still scope the book (they're not date/calendar filters).
   const coach = STATE.coachFilter;
   const headCoach = STATE.headCoachFilter;
   if(!STATE.raw?.clients) return [];
   return STATE.raw.clients.filter(c => {
     if(coach && (c.supportCoach || '').toUpperCase() !== coach.toUpperCase()) return false;
     if(headCoach && (c.headCoach || '').toUpperCase() !== headCoach.toUpperCase()) return false;
-    if(!from && !to) return true;
-    if(!c.originDateISO) return false;
-    if(from && c.originDateISO < from) return false;
-    if(to   && c.originDateISO > to)   return false;
     return true;
   });
 }
@@ -2086,27 +2008,10 @@ function render(){
   $('#sourceLabel').textContent = metrics.source || '—';
   $('#errorBanner').classList.remove('show');
 
-  // Filter summary banner
-  const fs = $('#filterSummary');
-  if(STATE.filter.preset === 'all' || (!STATE.filter.from && !STATE.filter.to)){
-    fs.classList.remove('show');
-  } else {
-    fs.classList.add('show');
-    $('#filterSummaryRange').textContent = filterLabel();
-    $('#filterSummaryCount').textContent = `${clients.length.toLocaleString()} clients`;
-  }
-
   renderSnapshot();
   renderSnapshotCharts();
   renderHeadline(metrics);
   renderFunnel(metrics);
-  // Keep the monthly calendar in step with the picker — jump it to the
-  // selected range's start month so the events you see trace to those dates.
-  if(STATE.filter.from){
-    const [fy, fm] = STATE.filter.from.split('-').map(Number);
-    calState.year = fy; calState.month = fm - 1;
-  }
-  renderCalendar();
   renderSupportCoachLeaderboard();
   renderClosers(metrics);
   renderEnding(metrics);
@@ -2370,42 +2275,14 @@ function startRealtime(){
 }
 
 /* =================================================================
-   DATE FILTER WIRING
+   DATE FILTER WIRING (disabled — date picker removed)
    ================================================================= */
-const dateFromEl = $('#dateFrom');
-const dateToEl   = $('#dateTo');
-
-function applyFilter(filter, { updateInputs = true, updatePresets = true } = {}){
+// applyFilter is kept only so a ?preset= URL param doesn't error —
+// it no longer changes any counts (filterClients ignores dates now).
+function applyFilter(filter){
   STATE.filter = filter;
-  if(updateInputs){
-    dateFromEl.value = filter.from || '';
-    dateToEl.value   = filter.to   || '';
-  }
-  if(updatePresets){
-    $$('#presets button').forEach(b => b.classList.toggle('active', b.dataset.preset === filter.preset));
-  }
-  updateRangeTrigger();
   if(STATE.raw) render();
 }
-
-$$('#presets button').forEach(b => {
-  b.addEventListener('click', () => applyFilter(presetRange(b.dataset.preset)));
-});
-
-function onDateChange(){
-  const from = dateFromEl.value || null;
-  const to   = dateToEl.value   || null;
-  // If both empty → fall back to "All"
-  if(!from && !to){
-    applyFilter(presetRange('all'));
-    return;
-  }
-  applyFilter({ from, to, preset: 'custom' }, { updateInputs: false });
-}
-dateFromEl.addEventListener('change', onDateChange);
-dateToEl.addEventListener('change', onDateChange);
-
-$('#filterClear').addEventListener('click', () => applyFilter(presetRange('all')));
 
 $('#coachSelect')?.addEventListener('change', (e) => setCoachFilter(e.target.value || null));
 $('#headCoachSelect')?.addEventListener('change', (e) => setHeadCoachFilter(e.target.value || null));
@@ -2677,14 +2554,6 @@ function shiftMonth(delta){
   calState.year = year; calState.month = month;
   renderCalendar();
 }
-$('#calPrev').addEventListener('click',  () => shiftMonth(-1));
-$('#calNext').addEventListener('click',  () => shiftMonth(+1));
-$('#calToday').addEventListener('click', () => {
-  const t = new Date();
-  calState.year = t.getFullYear(); calState.month = t.getMonth();
-  renderCalendar();
-});
-
 function openDayDrillDown(iso){
   if(!STATE.raw?.clients) return;
   const matched = STATE.raw.clients.filter(c => c.originDateISO === iso || c.endDateISO === iso);
