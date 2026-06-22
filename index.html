@@ -1129,10 +1129,12 @@
   <div class="chat-messages" id="chatMessages"></div>
 
   <div class="chat-suggestions" id="chatSuggestions">
+    <button data-q="How many active clients?">Active clients</button>
+    <button data-q="How many paying clients?">Paying clients</button>
+    <button data-q="How many men?">Men</button>
+    <button data-q="How many women?">Women</button>
     <button data-q="What's our churn rate?">Churn rate</button>
     <button data-q="What's our retention rate?">Retention rate</button>
-    <button data-q="What's our renewal rate?">Renewal rate</button>
-    <button data-q="Off-boarding split">Off-boarding</button>
     <button data-q="Top closer this month">Top closer</button>
     <button data-q="Programs ending soon">Ending soon</button>
   </div>
@@ -1213,11 +1215,13 @@ function titleCase(s){
    STATE + DATE FILTER + AGGREGATION
    ================================================================= */
 
-const ACTIVE_STATUSES = new Set(['ACTIVE_COACHING','ACTIVE_ONBOARDING','ACTIVE_LIFE']);
+// Active client = CURRENT_STATUS is "ACTIVE" (kept the older sub-statuses too,
+// so this works whether your sheet uses plain ACTIVE or the ACTIVE_* variants).
+const ACTIVE_STATUSES = new Set(['ACTIVE','ACTIVE_COACHING','ACTIVE_ONBOARDING','ACTIVE_LIFE']);
 
 const STATE = {
   raw: null,                            // full data.json (with clients[])
-  filter: presetRange('month'),        // default to the current calendar month (e.g. Jun 1 – Jun 30)
+  filter: presetRange('all'),          // default to no date filter on login (show all)
   coachFilter: null,                    // null = all coaches; else exact supportCoach name
   headCoachFilter: null,                // null = all; else exact headCoach name
   computed: null,
@@ -1313,7 +1317,28 @@ function compute(clients){
   const byCountry = counter(clients, c => c.country);
   const byCadence = counter(clients, c => c.paymentCadence);
   const byPay     = counter(clients, c => c.paymentStatus);
+  const byGender  = counter(clients, c => c.gender);
   const byCloser  = counter(clients, c => c.closer);
+
+  // --- Gender breakdown (total + active) ---
+  const isMale   = c => (c.gender || '').toUpperCase() === 'MALE';
+  const isFemale = c => (c.gender || '').toUpperCase() === 'FEMALE';
+  const maleTotal     = clients.filter(isMale).length;
+  const femaleTotal   = clients.filter(isFemale).length;
+  const maleActive    = activeArr.filter(isMale).length;
+  const femaleActive  = activeArr.filter(isFemale).length;
+
+  // --- Paying breakdown ---
+  // "Paying" = any payment status that means money is coming in (PAYING,
+  // PAID IN FULL, PARTNER PAYS, PAYING JASE DIRECTLY). Excludes NOT PAYING / FREE / blank.
+  const isPaying = (c) => {
+    const s = (c.paymentStatus || '').toUpperCase();
+    return s.startsWith('PAYING') || s === 'PAID IN FULL' || s === 'PARTNER PAYS';
+  };
+  const payingTotal  = clients.filter(isPaying).length;
+  const payingActive = activeArr.filter(isPaying).length;
+  const notPaying    = byPay.get('NOT PAYING') || 0;
+  const pifCount     = byPay.get('PAID IN FULL') || 0;
 
   const closers = [];
   for(const [name, count] of Array.from(byCloser.entries()).sort((a,b) => b[1] - a[1]).slice(0, 8)){
@@ -1429,7 +1454,10 @@ function compute(clients){
               contractValueTotal: Math.round(contractTotal),
               cashCollectedTotal: Math.round(cashTotal),
               avgContract: Math.round(avgContract),
-              endingIn30: ending30, pastDue },
+              endingIn30: ending30, pastDue,
+              male: maleTotal, female: femaleTotal,
+              activeMale: maleActive, activeFemale: femaleActive,
+              paying: payingTotal, payingActive, notPaying, pif: pifCount },
     headline: {
       churnRate: Math.round(churnRate * 10) / 10,
       churnLost: cancelledArr.length,
@@ -1449,6 +1477,7 @@ function compute(clients){
       byHeadCoach: topN(byCoach, 6),
       byCountry: topN(byCountry, 6),
       byCadence: topN(byCadence, 6),
+      byGender: topN(byGender, 4),
     },
     funnel: {
       onboarding: total,
@@ -1479,7 +1508,7 @@ const KPI_FILTERS = {
   onboarding:     { label:'In Onboarding',       icon:'↗', filter: c => c.status === 'ACTIVE_ONBOARDING' },
   coaching:       { label:'In Active Coaching',  icon:'✓', filter: c => c.status === 'ACTIVE_COACHING' },
   active_rate:    { label:'Active Clients',      icon:'%', filter: c => ACTIVE_STATUSES.has(c.status) },
-  paying:         { label:'Paying Clients',      icon:'$', filter: c => c.paymentStatus === 'PAYING' },
+  paying:         { label:'Paying Clients',      icon:'$', filter: c => ['PAYING','PAID IN FULL'].includes((c.paymentStatus||'').toString().trim().toUpperCase()) },
   not_paying:     { label:'Not Paying',          icon:'!', filter: c => c.paymentStatus === 'NOT PAYING' },
   pif:            { label:'Paid In Full',        icon:'★', filter: c => c.paymentStatus === 'PAID IN FULL' },
   contract_value: { label:'Top Contract Values', icon:'$', filter: c => c.contractValue > 0,
@@ -1639,12 +1668,13 @@ function snapshotScopeLabel(){
 }
 
 function snapshotTiles(){
-  const isActive = c => SNAPSHOT_ACTIVE.has(c.status);
-  const prog = p => (c => isActive(c) && c.program === p);
+  const isActive = c => SNAPSHOT_ACTIVE.has((c.status||'').toString().trim().toUpperCase());
+  const PROG = c => (c.program||'').toString().trim().toUpperCase();
+  const prog = p => (c => isActive(c) && PROG(c) === p);  // active clients in that program (matches the sheet)
   const gender = g => (c => isActive(c) && (c.gender || '').toUpperCase() === g);
   return [
-    { key:'active',    label:'Active Clients', hero:true, hint:'ONBOARDING + COACHING + PAUSED + LIFE', match: c => SNAPSHOT_ACTIVE.has(c.status) },
-    { key:'paying',    label:'Paying Clients', hero:true, hint:'ONBOARDING + COACHING',                 match: c => SNAPSHOT_PAYING.has(c.status) },
+    { key:'active',    label:'Active Clients', hero:true, hint:'ACTIVE BOOK',                            match: isActive },
+    { key:'paying',    label:'Paying Clients', hero:true, hint:'PAYMENT_STATUS = PAYING + PAID IN FULL', match: c => ['PAYING','PAID IN FULL'].includes((c.paymentStatus||'').toString().trim().toUpperCase()) },
     { key:'challenge', label:'Challenge',      hint:'Active · CHALLENGE', match: prog('CHALLENGE') },
     { key:'basecamp',  label:'Basecamp',       hint:'Active · BASECAMP',  match: prog('BASECAMP') },
     { key:'ignition',  label:'Ignition',       hint:'Active · IGNITION',  match: prog('IGNITION') },
@@ -2113,11 +2143,11 @@ function rowToClient(r){
     email: r.email,
     country: r.country,
     gender: r.gender,
-    program: (r.current_program || '').toUpperCase(),
+    program: (r.current_program || '').toString().trim().toUpperCase(),
     headCoach: r.head_coach,
     closer: r.closer || '',
     supportCoach: r.support_coach || 'N/A',
-    status: r.current_status,
+    status: (r.current_status || '').toString().trim().toUpperCase(),
     statusDate: disp(r.status_date),
     statusDateISO: iso(sd),
     lastEvent: r.last_event_type,
@@ -2166,7 +2196,7 @@ function _toNum(v){
 function extractClient(row, sourceTable){
   const rawName = (row.name_ptd || row.name_fb || row.client_name || row.name || row.client || '').toString().trim();
   if(!rawName) return null;
-  const status = row.current_status || (sourceTable === 'offboarded' ? 'CANCELLED' : '');
+  const status = (row.current_status || (sourceTable === 'offboarded' ? 'CANCELLED' : '')).toString().trim().toUpperCase();
   return {
     _sources: [sourceTable],
     id: row.email || rawName.toUpperCase(),
@@ -2217,26 +2247,15 @@ function mergeClients(a, b){
   return out;
 }
 
-// Tables that contain client identity, in priority order (richest first).
-// PROGRAMS + DATA VALIDATION DROPDOWNS skipped — they're config / catalog.
-const UNIFY_TABLES = ['raw','offboarded','onboarding','challenge_upgrade','momentum','celebration','catchup_call','kickoff','client_notes','retreat'];
+// Source the dashboard from the RAW tab ONLY (not the union of every tab),
+// so the numbers match the RAW data you see in the sidebar.
+const UNIFY_TABLES = ['raw'];
 
 function buildUnifiedClients(){
-  const byKey = new Map();
-  for(const tableName of UNIFY_TABLES){
-    const def = TABLES.find(t => t.name === tableName);
-    if(!def) continue;
-    const list = STATE.raw?.[def.key] || [];
-    for(const row of list){
-      // RAW comes pre-transformed by rowToClient; everything else needs extraction
-      const c = (tableName === 'raw') ? row : extractClient(row, tableName);
-      if(!c || !c.name) continue;
-      const key = (c.email || c.name).toString().trim().toUpperCase();
-      if(!key) continue;
-      byKey.set(key, mergeClients(byKey.get(key), c));
-    }
-  }
-  return Array.from(byKey.values());
+  // RAW tab only, NO dedup — one dashboard client per RAW row, so every count
+  // matches the RAW sheet exactly (filter a column there → same number here).
+  const def = TABLES.find(t => t.name === 'raw');
+  return (STATE.raw?.[def?.key] || []).slice();
 }
 
 /* === ALL 12 TABLES + the STATE.raw key each one maps to === */
@@ -3606,10 +3625,10 @@ function suggestQuestions(){
   return `I can read your current snapshot from <code style="background:#0c0e12;padding:2px 5px;border-radius:4px;color:var(--accent-soft)">${escapeHtml(_lastData?.source || 'data.json')}</code>. Try asking:
     <ul>
       <li>"How many active clients?"</li>
+      <li>"How many paying clients?"</li>
+      <li>"How many men / women?"</li>
       <li>"What's our contract value?"</li>
       <li>"Top closer by retention"</li>
-      <li>"Programs ending in the next week"</li>
-      <li>"How many on Ignition?"</li>
       <li>"Breakdown by country"</li>
     </ul>`;
 }
@@ -3646,6 +3665,19 @@ const RULES = [
     const payingPct = h.offTotal ? (h.offPaying / h.offTotal * 100) : 0;
     const challengePct = h.offTotal ? (h.offChallenge / h.offTotal * 100) : 0;
     return `Off-boarded: <strong>${n(h.offTotal)}</strong> total — ${n(h.offPaying)} paying clients (${fmtPct(payingPct)}) vs ${n(h.offChallenge)} challenge clients (${fmtPct(challengePct)}). (Same numbers as the headline KPI card.)`;
+  }],
+
+  // Gender — men / women / male / female / gender breakdown
+  [/\bgender\b|\bsex\b|\bmen\b|\bman\b|\bmales?\b|\bwomen\b|\bwoman\b|\bfemales?\b|\bguys\b|\bgirls\b|\bladies\b|\bgentlemen\b/i, (mt,d) => {
+    const q = (mt.input || '').toLowerCase();
+    const t = d.totals;
+    const wantMale   = /\b(men|man|males?|guys|gentlemen|boys)\b/.test(q);
+    const wantFemale = /\b(women|woman|females?|girls|ladies|gals)\b/.test(q);
+    if(wantMale && !wantFemale)
+      return `You have ${n(t.male)} men — ${n(t.activeMale)} of them currently active.`;
+    if(wantFemale && !wantMale)
+      return `You have ${n(t.female)} women — ${n(t.activeFemale)} of them currently active.`;
+    return `<span class="label">Gender breakdown</span><strong>Women</strong> — ${n(t.female)} (${n(t.activeFemale)} active)<br><strong>Men</strong> — ${n(t.male)} (${n(t.activeMale)} active)<br><span class="label" style="margin-top:6px">${n(t.male + t.female)} clients with gender on file.</span>`;
   }],
 
   // Active / total
@@ -3736,12 +3768,9 @@ const RULES = [
     }`],
 
   // Payments
-  [/(payment|paying|pif|paid in full|free)/i, (_,d) => {
-    const k = d.kpis;
-    const paying = k.find(x => x.key === 'paying')?.value || 0;
-    const notPaying = k.find(x => x.key === 'not_paying')?.value || 0;
-    const pif = k.find(x => x.key === 'pif')?.value || 0;
-    return `Paying: ${n(paying)}<br>Not paying: ${n(notPaying)}<br>Paid in full: ${n(pif)}`;
+  [/(payment|paying|pif|paid in full|partner pays|not paying|free)/i, (_,d) => {
+    const t = d.totals;
+    return `<span class="label">Paying clients</span><strong>${n(t.paying)}</strong> paying clients — ${n(t.payingActive)} of them currently active.<br>Of those, ${n(t.pif)} have paid in full.<br><strong>${n(t.notPaying)}</strong> not paying / free.`;
   }],
 
   // Cadence
